@@ -1,0 +1,158 @@
+/* The editor shell: top bar, editor area with the dock, command drawer, status bar. */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.app__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+  padding: var(--pad);
+  border-width: 0 0 var(--bw);
+}
+.app__brand {
+  padding: 0 var(--pad);
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+.app__toolbar {
+  padding: 0;
+}
+.app__top > .spacer {
+  flex: 1;
+}
+.app__file {
+  padding: 0 var(--pad);
+  color: var(--text-dim);
+  white-space: nowrap;
+  max-width: 24ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app__main {
+  flex: 1;
+  min-height: 0;
+}
+.app__editors {
+  position: relative;
+  height: 100%;
+  background: var(--bg);
+}
+.app__editor {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.app__editor[hidden] {
+  display: none;
+}
+.app__editor > * {
+  flex: 1;
+  min-height: 0;
+}
+.editor-empty {
+  display: grid;
+  place-items: center;
+}
+
+.app__dock {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+  height: 100%;
+  padding: calc(var(--pad) * 1.5);
+  overflow: auto;
+  border-width: 0 0 0 var(--bw);
+}
+.app__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+.app__section > h2 {
+  font-size: var(--fs-small);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+.app__preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: 0;
+}
+.app__preview-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.app__info {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px var(--gap);
+  margin: 0;
+  font-size: var(--fs-small);
+}
+.app__info dt {
+  color: var(--text-faint);
+}
+.app__info dd {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app__meters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.app__cli {
+  flex: none;
+  height: 200px;
+  min-height: 0;
+  overflow: hidden;
+}
+.app__cli[hidden] {
+  display: none;
+}
+
+.app__status {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gap) * 2);
+  min-height: var(--row-h);
+  padding: 0 var(--pad);
+  font-size: var(--fs-small);
+  border-width: var(--bw) 0 0;
+}
+.status__message {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status__info {
+  color: var(--text-dim);
+}
+.status__num {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.status__num[data-state='warn'] {
+  color: var(--warn);
+}
+.status__num[data-state='over'] {
+  color: var(--danger);
+  font-weight: 700;
+}

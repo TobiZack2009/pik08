@@ -1,0 +1,145 @@
+/* Shared by the sfx and music editors: a list on the left, a bar and a grid of rows on the right. */
+
+.tracker {
+  height: 100%;
+  display: flex;
+  gap: var(--gap);
+  padding: var(--pad);
+  min-height: 0;
+}
+
+.tracker__list {
+  flex: none;
+  width: 72px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.tracker__item {
+  flex: none;
+  height: var(--row-h);
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  text-align: left;
+  padding: 0 var(--pad);
+  cursor: pointer;
+}
+.tracker__item:hover {
+  background: var(--surface-hi);
+}
+.tracker__item[data-silent='true'] {
+  color: var(--text-faint);
+}
+.tracker__item[data-selected] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.tracker__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.tracker__bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+.tracker__bar .spacer {
+  flex: 1;
+}
+
+.tracker__title {
+  min-width: 6ch;
+}
+
+.tracker__field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-dim);
+}
+
+.tracker__num,
+.tracker__select {
+  height: calc(var(--row-h) - 4px);
+  background: var(--code-bg);
+  border: var(--bw) solid var(--border);
+  padding: 0 4px;
+}
+.tracker__num {
+  width: 6ch;
+}
+
+.tracker__grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--code-bg);
+  border: var(--bw) solid var(--border);
+}
+
+.tracker__row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  height: var(--row-h);
+  padding: 0 var(--pad);
+}
+.tracker__row--head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
+  color: var(--text-dim);
+}
+.tracker__row[data-silent='true'] {
+  color: var(--text-faint);
+}
+.tracker__row[data-loop='true'] {
+  background: var(--code-line);
+}
+.tracker__row[data-used='false'] {
+  color: var(--text-faint);
+}
+
+.tracker__index {
+  flex: none;
+  width: 3ch;
+  color: var(--text-faint);
+}
+
+.tracker__cell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tracker__note {
+  min-width: 4ch;
+  color: var(--syn-number);
+}
+
+.tracker__flag {
+  flex: none;
+  width: 8ch;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tracker [hidden] {
+  display: none;
+}

@@ -1,0 +1,252 @@
+/* Styles of the custom elements. Tokens come from ../theme.css. */
+
+/* ---- p8-icon ---- */
+p8-icon {
+  display: inline-flex;
+  flex: none;
+  width: var(--icon);
+  height: var(--icon);
+  vertical-align: middle;
+}
+p8-icon > svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- p8-button ---- */
+p8-button {
+  display: inline-flex;
+}
+.p8-button__inner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+  min-width: var(--row-h);
+  height: var(--row-h);
+  padding: 0 var(--pad);
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(--surface);
+  border: var(--bw) solid var(--border);
+  box-shadow:
+    inset var(--bw) var(--bw) 0 var(--bevel-hi),
+    inset calc(-1 * var(--bw)) calc(-1 * var(--bw)) 0 var(--bevel-lo);
+}
+.p8-button__inner:hover:not(:disabled) {
+  background: var(--surface-hi);
+}
+.p8-button__inner:active:not(:disabled),
+p8-button[pressed] > .p8-button__inner {
+  background: var(--surface-lo);
+  box-shadow:
+    inset var(--bw) var(--bw) 0 var(--bevel-lo),
+    inset calc(-1 * var(--bw)) calc(-1 * var(--bw)) 0 var(--bevel-hi);
+}
+p8-button[pressed] > .p8-button__inner {
+  color: var(--accent);
+}
+.p8-button__inner:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+p8-button[variant='primary'] > .p8-button__inner {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+p8-button[variant='primary'] > .p8-button__inner:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 85%, white);
+}
+p8-button[variant='danger'] > .p8-button__inner {
+  background: var(--danger);
+  color: var(--p8-7, #fff1e8);
+}
+p8-button[variant='ghost'] > .p8-button__inner {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+p8-button[variant='ghost'] > .p8-button__inner:hover:not(:disabled) {
+  background: var(--surface-hi);
+}
+p8-button[variant='ghost'][pressed] > .p8-button__inner {
+  background: var(--surface-lo);
+  border-color: var(--border);
+}
+
+/* ---- p8-tabs ---- */
+p8-tabs {
+  display: inline-flex;
+  gap: var(--bw);
+}
+.p8-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap);
+  height: var(--row-h);
+  padding: 0 calc(var(--pad) * 1.5);
+  cursor: pointer;
+  background: var(--surface-lo);
+  color: var(--text-dim);
+  border: var(--bw) solid var(--border);
+}
+.p8-tab:hover {
+  background: var(--surface-hi);
+  color: var(--text);
+}
+.p8-tab[aria-selected='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* ---- p8-toolbar ---- */
+p8-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: var(--pad);
+}
+p8-toolbar[vertical] {
+  flex-direction: column;
+  align-items: stretch;
+}
+p8-toolbar > .spacer {
+  flex: 1;
+}
+p8-toolbar > .sep {
+  align-self: stretch;
+  width: var(--bw);
+  margin: 2px 0;
+  background: var(--border);
+}
+p8-toolbar[vertical] > .sep {
+  width: auto;
+  height: var(--bw);
+  margin: 0 2px;
+}
+
+/* ---- p8-split ---- */
+p8-split {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+.p8-split__handle {
+  flex: none;
+  width: 6px;
+  cursor: col-resize;
+  background: var(--border);
+  touch-action: none;
+}
+p8-split[direction='column'] > .p8-split__handle {
+  width: auto;
+  height: 6px;
+  cursor: row-resize;
+}
+.p8-split__handle:hover,
+.p8-split__handle[data-dragging] {
+  background: var(--accent);
+}
+
+/* ---- p8-meter ---- */
+p8-meter {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  font-size: var(--fs-small);
+}
+.p8-meter__label {
+  flex: none;
+  min-width: 7ch;
+  color: var(--text-dim);
+}
+.p8-meter__bar {
+  flex: 1;
+  height: 8px;
+  min-width: 40px;
+  background: var(--surface-lo);
+  border: var(--bw) solid var(--border);
+  overflow: hidden;
+}
+.p8-meter__fill {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+}
+p8-meter[data-state='warn'] .p8-meter__fill {
+  background: var(--warn);
+}
+p8-meter[data-state='over'] .p8-meter__fill {
+  background: var(--danger);
+}
+p8-meter[data-state='over'] .p8-meter__amount {
+  color: var(--danger);
+  font-weight: 700;
+}
+.p8-meter__amount {
+  flex: none;
+  min-width: 12ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- p8-palette ---- */
+p8-palette {
+  display: grid;
+  grid-template-columns: repeat(var(--columns, 4), 1fr);
+  gap: var(--bw);
+  width: max-content;
+}
+.p8-swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
+  background: var(--swatch);
+  border: var(--bw) solid var(--border);
+}
+.p8-swatch[aria-checked='true'] {
+  outline: var(--bw) solid var(--p8-7, #fff1e8);
+  outline-offset: calc(-2 * var(--bw));
+  box-shadow: 0 0 0 var(--bw) var(--accent);
+  position: relative;
+}
+.p8-palette__gap {
+  grid-column: 1 / -1;
+  height: var(--gap);
+}
+
+/* ---- p8-dialog ---- */
+p8-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--p8-0, #000) 65%, transparent);
+}
+.p8-dialog__panel {
+  width: min(480px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+  padding: calc(var(--pad) * 2);
+}
+.p8-dialog__title {
+  font-size: calc(var(--fs) + 2px);
+}
+.p8-dialog__body {
+  overflow: auto;
+  color: var(--text-dim);
+}
+.p8-dialog__body p {
+  margin: 0 0 var(--gap);
+}
+.p8-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gap);
+}

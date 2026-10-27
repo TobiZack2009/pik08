@@ -1,0 +1,37 @@
+.player {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+  background: var(--p8-0, #000);
+}
+
+.player__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player__screen {
+  display: block;
+  background: var(--p8-0, #000);
+  outline: none;
+}
+
+.player__note {
+  margin: 0;
+  height: 24px;
+  max-width: 100%;
+  padding: 0 var(--pad);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-faint);
+  font-size: var(--fs-small);
+}
+
+.player__note[data-state='error'] {
+  color: var(--danger);
+}

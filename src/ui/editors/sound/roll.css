@@ -1,0 +1,88 @@
+/* The piano roll: a toolbar, then the ruler, the scrolling note grid and the lanes under it. */
+
+.roll {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.roll__bar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+}
+.roll__bar .sep {
+  align-self: stretch;
+  width: var(--bw);
+  background: var(--border);
+}
+.roll__bar .spacer {
+  flex: 1;
+}
+
+.roll__board {
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+  display: flex;
+}
+
+.roll__column {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.roll__canvas {
+  display: block;
+  flex: none;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+.roll__grid {
+  cursor: crosshair;
+}
+.roll__ruler,
+.roll__lanes {
+  cursor: pointer;
+}
+
+.roll__scroller {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.roll__stage {
+  position: relative;
+}
+
+.roll__selection {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border-inline: 1px solid var(--accent);
+}
+
+.roll__playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  margin-left: -1px;
+  pointer-events: none;
+  background: var(--p8-7, #fff1e8);
+}
+
+.roll [hidden] {
+  display: none;
+}

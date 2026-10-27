@@ -1,0 +1,154 @@
+.map-editor {
+  --tile: 16px; /* one map tile on screen; set by the zoom */
+  --grid-strong: color-mix(in srgb, var(--text) 40%, transparent);
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg);
+}
+.map-editor > p8-split {
+  flex: 1;
+}
+.map-editor__tools {
+  flex: none;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: var(--bw) solid var(--border);
+}
+
+.map-editor__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.map-editor__ops {
+  flex: none;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border-bottom: var(--bw) solid var(--border);
+}
+.map-editor__zoom {
+  min-width: 5ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+
+.map-editor__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg);
+}
+.map-editor__board {
+  position: relative;
+  width: calc(128 * var(--tile));
+  height: calc(64 * var(--tile));
+  background: var(--p8-0, #000);
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+.map-editor__board[data-tool='pick'] {
+  cursor: copy;
+}
+.map-editor__board[data-tool='pan'],
+.map-editor__board[data-pan='on'] {
+  cursor: grab;
+}
+.map-editor__board > * {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* lines every tile (faint) and every screen of 16 tiles (strong) */
+.map-editor__grid {
+  background-image:
+    linear-gradient(to right, var(--grid-strong) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-strong) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size:
+    calc(16 * var(--tile)) 100%,
+    100% calc(16 * var(--tile)),
+    var(--tile) 100%,
+    100% var(--tile);
+}
+.map-editor[data-zoom='1'] .map-editor__grid {
+  background-image:
+    linear-gradient(to right, var(--grid-strong) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-strong) 1px, transparent 1px);
+  background-size:
+    calc(16 * var(--tile)) 100%,
+    100% calc(16 * var(--tile));
+}
+.map-editor[data-grid='off'] .map-editor__grid {
+  display: none;
+}
+
+/* the line where the map continues in the sprite sheet's memory */
+.map-editor__shared {
+  inset: auto;
+  left: 0;
+  top: calc(32 * var(--tile));
+  height: 0;
+  border-top: var(--bw) dashed var(--warn);
+}
+.map-editor__shared > span {
+  position: sticky;
+  left: 0;
+  display: inline-block;
+  padding: 0 var(--pad);
+  font-size: var(--fs-small);
+  background: var(--warn);
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+
+.map-editor__marquee,
+.map-editor__cursor {
+  inset: auto;
+  left: calc(var(--x) * var(--tile));
+  top: calc(var(--y) * var(--tile));
+  width: calc(var(--w) * var(--tile));
+  height: calc(var(--h) * var(--tile));
+  box-sizing: border-box;
+  outline: 1px solid var(--p8-0, #000);
+}
+.map-editor__marquee {
+  border: var(--bw) dashed var(--focus);
+}
+.map-editor__cursor {
+  border: var(--bw) solid var(--text);
+  mix-blend-mode: difference;
+}
+.map-editor__marquee[hidden],
+.map-editor__cursor[hidden] {
+  display: none;
+}
+
+.map-editor__side {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+  padding: var(--pad);
+  overflow: auto;
+  background: var(--surface);
+}
+.map-editor__side h3 {
+  margin: 0 0 var(--gap);
+  font-size: var(--fs-small);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.map-editor__side p {
+  margin: var(--gap) 0 0;
+  font-size: var(--fs-small);
+}

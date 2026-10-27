@@ -1,0 +1,37 @@
+.gallery {
+  height: 100%;
+  overflow: auto;
+  padding: calc(var(--pad) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 2);
+}
+.gallery__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.gallery__section h2 {
+  font-size: var(--fs);
+  color: var(--text-dim);
+  margin-bottom: var(--gap);
+}
+.gallery__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+}
+.gallery__icon {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 92px;
+  padding: var(--pad) 0;
+  color: var(--text);
+}
+.gallery__icon small {
+  font-size: var(--fs-small);
+  color: var(--text-faint);
+}

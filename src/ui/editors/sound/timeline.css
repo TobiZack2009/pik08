@@ -1,0 +1,201 @@
+/* The song timeline: a row per channel, a column per bar, the labels and the ruler staying in view. */
+
+.timeline {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.timeline__bar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+}
+.timeline__bar .sep {
+  align-self: stretch;
+  width: var(--bw);
+  background: var(--border);
+}
+.timeline__bar .spacer {
+  flex: 1;
+}
+
+.timeline__scroller {
+  flex: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.timeline__grid {
+  display: grid;
+  grid-template-columns: var(--timeline-label-w) repeat(64, var(--timeline-cell-w));
+  grid-auto-rows: var(--timeline-cell-h);
+  width: max-content;
+}
+
+.timeline__corner,
+.timeline__label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--surface);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  border-right: var(--bw) solid var(--border);
+}
+.timeline__label[data-selected] {
+  color: var(--accent-text);
+  background: var(--accent);
+}
+
+.timeline__ruler {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1.1;
+  background: var(--surface);
+  color: var(--text-dim);
+  border-left: 1px solid var(--surface-lo);
+  cursor: pointer;
+}
+.timeline__ruler[data-loop] {
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+.timeline__ruler[data-selected] {
+  color: var(--accent-text);
+  background: var(--accent);
+}
+.timeline__ruler[data-playing] {
+  background: var(--text);
+  color: var(--surface);
+}
+
+.timeline__cell {
+  position: relative;
+  border: 0;
+  border-left: 1px solid var(--surface-lo);
+  border-top: 1px solid var(--surface-lo);
+  padding: 0;
+  margin: 0;
+  color: #000;
+  font: inherit;
+  cursor: pointer;
+}
+.timeline__cell[data-empty] {
+  background: var(--code-bg);
+}
+.timeline__cell[data-empty]:hover {
+  background: var(--surface-hi);
+}
+.timeline__cell[data-loop][data-empty] {
+  background: var(--code-line);
+}
+.timeline__cell[data-playing] {
+  filter: brightness(1.25);
+  outline: 1px solid var(--text);
+  outline-offset: -1px;
+}
+.timeline__cell[data-selected] {
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
+  z-index: 1;
+}
+/* a pattern that more than one cell plays */
+.timeline__cell[data-shared]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 5px;
+  height: 5px;
+  background: #000;
+}
+
+.timeline [hidden] {
+  display: none;
+}
+
+/* the selected cell, edited in place: its number, and arrows to step it */
+.timeline__grid {
+  position: relative;
+}
+.timeline__editor {
+  position: absolute;
+  z-index: 1; /* over the cells, under the sticky labels */
+  box-sizing: border-box;
+  width: var(--timeline-cell-w);
+  height: var(--timeline-cell-h);
+  display: flex;
+  background: var(--code-bg);
+  color: #000;
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
+}
+.timeline__editor[data-empty] {
+  color: var(--text);
+}
+.timeline__number {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0 0 2px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.timeline__number::-webkit-inner-spin-button,
+.timeline__number::-webkit-outer-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+.timeline__number:focus {
+  outline: none;
+  background: var(--code-bg);
+  color: var(--text);
+}
+.timeline__steps {
+  flex: none;
+  width: 14px;
+  display: flex;
+  flex-direction: column;
+  margin: 2px 2px 2px 0;
+}
+.timeline__step {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: rgb(0 0 0 / 25%);
+  color: inherit;
+  cursor: pointer;
+}
+.timeline__step:hover {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.timeline__step p8-icon {
+  --icon: 10px;
+}
+
+.timeline__flags {
+  display: flex;
+  gap: 1px;
+  align-items: center;
+  height: 12px;
+}
