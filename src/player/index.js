@@ -1,5 +1,5 @@
 import './player.css'
-import { h } from '../ui/dom.js'
+import { elemake } from '../ui/dom.js'
 import { createGame } from './game.js'
 import { CHANNEL_NAME } from './hot-reload.js'
 
@@ -38,9 +38,9 @@ function saveScreenshot(canvas) {
  */
 export function mountPlayer(root, { profile, channel = () => new BroadcastChannel(CHANNEL_NAME), now = () => performance.now(), clock }) {
   const { width, height } = profile.display
-  const canvas = /** @type {HTMLCanvasElement} */ (h('canvas', { class: 'pixel player__screen', width, height, tabindex: 0, 'aria-label': 'running cart' }))
-  const note = h('p', { class: 'player__note' }, 'waiting for the editor...')
-  root.replaceChildren(h('div', { class: 'player' }, h('div', { class: 'player__stage' }, canvas), note))
+  const canvas = /** @type {HTMLCanvasElement} */ (elemake('canvas', { class: 'pixel player__screen', width, height, tabindex: 0, 'aria-label': 'running cart' }))
+  const note = elemake('p', { class: 'player__note' }, 'waiting for the editor...')
+  root.replaceChildren(elemake('div', { class: 'player' }, elemake('div', { class: 'player__stage' }, canvas), note))
   document.title = 'p8n - run'
 
   const link = channel()

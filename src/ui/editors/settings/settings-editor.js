@@ -1,5 +1,5 @@
 import './settings.css'
-import { h } from '../../dom.js'
+import { elemake } from '../../dom.js'
 import { appearancePage } from './appearance-page.js'
 import { shortcutsPage } from './shortcuts-page.js'
 
@@ -44,9 +44,9 @@ export function createSettingsEditor(ctx) {
   let page
   let current = ''
 
-  const panel = h('div', { class: 'settings__page', role: 'tabpanel' })
+  const panel = elemake('div', { class: 'settings__page', role: 'tabpanel' })
   const buttons = CATEGORIES.map((category) =>
-    h(
+    elemake(
       'button',
       {
         type: 'button',
@@ -55,11 +55,11 @@ export function createSettingsEditor(ctx) {
         dataset: { id: category.id },
         onclick: () => select(category.id),
       },
-      h('p8-icon', { name: category.icon }),
-      h('span', null, category.label),
+      elemake('p8-icon', { name: category.icon }),
+      elemake('span', null, category.label),
     ),
   )
-  const menu = h(
+  const menu = elemake(
     'nav',
     { class: 'settings__menu', role: 'tablist', 'aria-orientation': 'vertical', 'aria-label': 'Settings categories', onkeydown: onMenuKey },
     buttons,
@@ -95,7 +95,7 @@ export function createSettingsEditor(ctx) {
 
   select(CATEGORIES[0].id)
   return {
-    el: h('div', { class: 'settings' }, menu, panel),
+    el: elemake('div', { class: 'settings' }, menu, panel),
     destroy: () => page?.destroy?.(),
   }
 }

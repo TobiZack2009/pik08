@@ -1,6 +1,6 @@
 import './sound.css'
 import '../tracker.css'
-import { h } from '../../dom.js'
+import { elemake } from '../../dom.js'
 import { titleHints } from '../../hints.js'
 import { createBindings } from '../../shortcuts.js'
 import { createRegionEdits } from '../region-edits.js'
@@ -128,11 +128,11 @@ export function createSoundEditor({ project, setInfo, setStatus, sound, bindings
   const pattern = createPatternPanel({ project, edits: patternEdits, sound, setInfo, onSelect: showInfo, isFocused: isFocused('pattern') })
   const song = createSongPanel({ project, edits, sound, setStatus, follow: (id) => pattern.select(id), onEmpty: offerDraft, onSelect: showInfo, isFocused: isFocused('song') })
 
-  const undoButton = hints.hint(h('p8-button', { icon: 'undo', onclick: () => undo() }), 'Undo', 'undo')
-  const redoButton = hints.hint(h('p8-button', { icon: 'redo', onclick: () => redo() }), 'Redo', 'redo')
-  const bar = h('div', { class: 'tracker__bar' }, h('strong', { class: 'tracker__title' }, 'Sound'), h('span', { class: 'spacer' }), undoButton, redoButton)
+  const undoButton = hints.hint(elemake('p8-button', { icon: 'undo', onclick: () => undo() }), 'Undo', 'undo')
+  const redoButton = hints.hint(elemake('p8-button', { icon: 'redo', onclick: () => redo() }), 'Redo', 'redo')
+  const bar = elemake('div', { class: 'tracker__bar' }, elemake('strong', { class: 'tracker__title' }, 'Sound'), elemake('span', { class: 'spacer' }), undoButton, redoButton)
 
-  const el = h('div', { class: 'sound' }, bar, song.el, pattern.el)
+  const el = elemake('div', { class: 'sound' }, bar, song.el, pattern.el)
 
   // ---- showing the data -------------------------------------------------------------------------
   /** Puts the readout of the panel that has the keyboard in the status bar. */

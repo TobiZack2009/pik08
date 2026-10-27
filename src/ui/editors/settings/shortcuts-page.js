@@ -1,4 +1,4 @@
-import { h } from '../../dom.js'
+import { elemake } from '../../dom.js'
 import { bindingOf, formatBinding, formatHeld } from '../../shortcuts.js'
 
 /** @import { ActionSpec } from '../../shortcuts.js' */
@@ -18,14 +18,14 @@ function shortcutRow(spec, { bindings, actions }) {
   /** Whether the next space bar release must not click the button again. */
   let swallowSpaceUp = false
 
-  const error = h('div', { class: 'settings__error', role: 'alert' })
-  const reset = h('p8-button', {
+  const error = elemake('div', { class: 'settings__error', role: 'alert' })
+  const reset = elemake('p8-button', {
     icon: 'rotate-ccw',
     variant: 'ghost',
     title: `Reset ${spec.label} to its default`,
     onclick: () => bindings.reset(spec.id),
   })
-  const key = h('button', {
+  const key = elemake('button', {
     type: 'button',
     class: 'settings__key',
     title: 'Click, then press the new shortcut',
@@ -36,7 +36,7 @@ function shortcutRow(spec, { bindings, actions }) {
       if (recording) render()
     },
   })
-  const el = h('div', { class: 'settings__row settings__row--keys', dataset: { action: spec.id } }, h('span', { class: 'settings__label' }, spec.label), key, reset, error)
+  const el = elemake('div', { class: 'settings__row settings__row--keys', dataset: { action: spec.id } }, elemake('span', { class: 'settings__label' }, spec.label), key, reset, error)
 
   /** @param {string} id */
   const nameOf = (id) => {
@@ -122,7 +122,7 @@ function shortcutRow(spec, { bindings, actions }) {
 export function shortcutsPage(settings) {
   const { bindings, actions } = settings
   const rows = actions.map((spec) => shortcutRow(spec, settings))
-  const resetAll = h('p8-button', { icon: 'rotate-ccw', onclick: () => bindings.resetAll() }, 'Reset all')
+  const resetAll = elemake('p8-button', { icon: 'rotate-ccw', onclick: () => bindings.resetAll() }, 'Reset all')
 
   const refresh = () => {
     for (const r of rows) r.render()
@@ -132,22 +132,22 @@ export function shortcutsPage(settings) {
   resetAll.toggleAttribute('disabled', !bindings.anyCustom())
 
   const groups = [...new Set(actions.map((a) => a.group))]
-  const el = h(
+  const el = elemake(
     'section',
     { class: 'settings__section' },
-    h(
+    elemake(
       'div',
       { class: 'settings__header' },
-      h('h2', { class: 'settings__title' }, 'Shortcuts'),
-      h('span', { class: 'spacer' }),
+      elemake('h2', { class: 'settings__title' }, 'Shortcuts'),
+      elemake('span', { class: 'spacer' }),
       resetAll,
     ),
    
     groups.map((group) =>
-      h(
+      elemake(
         'div',
         { class: 'settings__group' },
-        h('h3', { class: 'settings__subtitle' }, group),
+        elemake('h3', { class: 'settings__subtitle' }, group),
         rows.filter((_, i) => actions[i].group === group).map((r) => r.el),
       ),
     ),

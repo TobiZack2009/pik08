@@ -1,4 +1,4 @@
-import { clamp, h } from '../dom.js'
+import { clamp, elemake } from '../dom.js'
 
 const STEP = 16
 const BIG_STEP = 64
@@ -25,7 +25,7 @@ export class P8Split extends HTMLElement {
     if (!first || !second) return
     this.#defaultSize = Number(this.getAttribute('size') ?? 240)
     this.#size = this.#stored() ?? this.#defaultSize
-    this.#handle = h('div', {
+    this.#handle = elemake('div', {
       class: 'p8-split__handle',
       role: 'separator',
       tabindex: '0',

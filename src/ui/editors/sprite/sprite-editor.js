@@ -1,6 +1,6 @@
 import './sprite-editor.css'
 import { paintIndexed } from '../../../player/renderer.js'
-import { h } from '../../dom.js'
+import { elemake } from '../../dom.js'
 import { RegionHistory } from '../../history.js'
 import { titleHints } from '../../hints.js'
 import { createBindings } from '../../shortcuts.js'
@@ -92,11 +92,11 @@ export function createSpriteEditor({ project, setStatus, setInfo, bindings = cre
   let active = false
 
   // ---- elements ---------------------------------------------------------------------------------
-  const canvas = /** @type {HTMLCanvasElement} */ (h('canvas', { class: 'pixel' }))
-  const overlay = /** @type {HTMLCanvasElement} */ (h('canvas', { class: 'pixel' }))
-  const grid = h('div', { class: 'sprite-editor__grid' })
-  const marquee = h('div', { class: 'sprite-editor__marquee', hidden: true })
-  const board = h('div', { class: 'sprite-editor__board', dataset: { tool: state.tool } }, canvas, overlay, grid, marquee)
+  const canvas = /** @type {HTMLCanvasElement} */ (elemake('canvas', { class: 'pixel' }))
+  const overlay = /** @type {HTMLCanvasElement} */ (elemake('canvas', { class: 'pixel' }))
+  const grid = elemake('div', { class: 'sprite-editor__grid' })
+  const marquee = elemake('div', { class: 'sprite-editor__marquee', hidden: true })
+  const board = elemake('div', { class: 'sprite-editor__board', dataset: { tool: state.tool } }, canvas, overlay, grid, marquee)
 
   const picker = createSpritePicker({
     project,
@@ -104,7 +104,7 @@ export function createSpriteEditor({ project, setStatus, setInfo, bindings = cre
     onSelect: (selection) => setSelection(selection),
   })
 
-  const paletteEl = h('p8-palette', { value: state.color, count: 16, columns: 8 })
+  const paletteEl = elemake('p8-palette', { value: state.color, count: 16, columns: 8 })
   paletteEl.addEventListener('change', (e) => {
     state.color = /** @type {CustomEvent} */ (e).detail.value
   })
@@ -113,13 +113,13 @@ export function createSpriteEditor({ project, setStatus, setInfo, bindings = cre
   const toolButtons = new Map()
   for (const id of TOOLS) {
     const { icon, label } = TOOL_INFO[id]
-    toolButtons.set(id, hints.hint(h('p8-button', { icon, variant: 'ghost', onclick: () => setTool(id) }), label, `sprite:tool:${id}`))
+    toolButtons.set(id, hints.hint(elemake('p8-button', { icon, variant: 'ghost', onclick: () => setTool(id) }), label, `sprite:tool:${id}`))
   }
-  const filledButton = h('p8-button', { icon: 'circle-dot', title: 'Filled rectangles and ellipses', variant: 'ghost', toggle: true })
+  const filledButton = elemake('p8-button', { icon: 'circle-dot', title: 'Filled rectangles and ellipses', variant: 'ghost', toggle: true })
   filledButton.addEventListener('change', (e) => {
     state.filled = /** @type {CustomEvent} */ (e).detail.pressed
   })
-  const tools = h('p8-toolbar', { class: 'sprite-editor__tools', vertical: true, 'aria-label': 'Tools' }, [...toolButtons.values()], h('div', { class: 'sep' }), filledButton)
+  const tools = elemake('p8-toolbar', { class: 'sprite-editor__tools', vertical: true, 'aria-label': 'Tools' }, [...toolButtons.values()], elemake('div', { class: 'sep' }), filledButton)
 
   /**
    * @param {string} icon
@@ -127,37 +127,37 @@ export function createSpriteEditor({ project, setStatus, setInfo, bindings = cre
    * @param {import('../../shortcuts.js').ShortcutAction} action
    * @param {() => void} run
    */
-  const opButton = (icon, title, action, run) => hints.hint(h('p8-button', { icon, variant: 'ghost', onclick: run }), title, action)
+  const opButton = (icon, title, action, run) => hints.hint(elemake('p8-button', { icon, variant: 'ghost', onclick: run }), title, action)
   const undoButton = opButton('undo', 'Undo', 'undo', () => undo())
   const redoButton = opButton('redo', 'Redo', 'redo', () => redo())
-  const gridButton = h('p8-button', { icon: 'grid', title: 'Show pixel grid', variant: 'ghost', toggle: true, pressed: true })
+  const gridButton = elemake('p8-button', { icon: 'grid', title: 'Show pixel grid', variant: 'ghost', toggle: true, pressed: true })
   gridButton.addEventListener('change', (e) => {
     state.grid = /** @type {CustomEvent} */ (e).detail.pressed
     el.dataset.grid = state.grid ? 'on' : 'off'
   })
-  const ops = h(
+  const ops = elemake(
     'p8-toolbar',
     { class: 'sprite-editor__ops', 'aria-label': 'Edit' },
     undoButton,
     redoButton,
-    h('div', { class: 'sep' }),
+    elemake('div', { class: 'sep' }),
     opButton('flip-horizontal', 'Flip horizontally', 'sprite:flipH', () => flip('h')),
     opButton('flip-vertical', 'Flip vertically', 'sprite:flipV', () => flip('v')),
     opButton('rotate-cw', 'Rotate clockwise', 'sprite:rotate', () => rotate()),
-    h('div', { class: 'sep' }),
+    elemake('div', { class: 'sep' }),
     opButton('copy', 'Copy', 'sprite:copy', () => copy()),
     opButton('scissors', 'Cut', 'sprite:cut', () => cut()),
     opButton('paste', 'Paste', 'sprite:paste', () => paste()),
     opButton('trash', 'Clear', 'sprite:clear', () => clear()),
-    h('div', { class: 'spacer' }),
+    elemake('div', { class: 'spacer' }),
     gridButton,
   )
 
-  const stage = h('div', { class: 'sprite-editor__stage' }, board)
-  const main = h('div', { class: 'sprite-editor__main' }, ops, stage)
+  const stage = elemake('div', { class: 'sprite-editor__stage' }, board)
+  const main = elemake('div', { class: 'sprite-editor__main' }, ops, stage)
 
   const flagButtons = Array.from({ length: 8 }, (_, bit) =>
-    h('button', {
+    elemake('button', {
       type: 'button',
       class: 'sprite-editor__flag',
       title: `Flag ${bit}`,
@@ -167,16 +167,16 @@ export function createSpriteEditor({ project, setStatus, setInfo, bindings = cre
       onclick: () => toggleFlag(bit),
     }),
   )
-  const side = h(
+  const side = elemake(
     'div',
     { class: 'sprite-editor__side' },
-    h('section', null, h('h3', null, 'Colour'), paletteEl),
-    h('section', null, h('h3', null, 'Flags'), h('div', { class: 'sprite-editor__flags' }, flagButtons)),
-    h('section', null, h('h3', null, 'Sprite sheet'), picker.el, h('p', { class: 'faint' }, 'Drag to select up to 8 x 8 sprites.')),
+    elemake('section', null, elemake('h3', null, 'Colour'), paletteEl),
+    elemake('section', null, elemake('h3', null, 'Flags'), elemake('div', { class: 'sprite-editor__flags' }, flagButtons)),
+    elemake('section', null, elemake('h3', null, 'Sprite sheet'), picker.el, elemake('p', { class: 'faint' }, 'Drag to select up to 8 x 8 sprites.')),
   )
 
-  const split = h('p8-split', { fixed: 'end', size: 300, min: 220, 'storage-key': 'sprite-side' }, main, side)
-  const el = h('div', { class: 'sprite-editor', dataset: { grid: 'on' } }, tools, split)
+  const split = elemake('p8-split', { fixed: 'end', size: 300, min: 220, 'storage-key': 'sprite-side' }, main, side)
+  const el = elemake('div', { class: 'sprite-editor', dataset: { grid: 'on' } }, tools, split)
 
   // ---- drawing the view -------------------------------------------------------------------------
   function paint() {

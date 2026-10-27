@@ -1,5 +1,5 @@
 import './cli-drawer.css'
-import { h } from './dom.js'
+import { elemake } from './dom.js'
 import { executeCommand } from './cli.js'
 import { compressedSize, quickStats } from './stats.js'
 
@@ -49,15 +49,15 @@ export function createCliContext({ project, actions, run }) {
  */
 export function createCliDrawer(host) {
   const context = createCliContext(host)
-  const log = h('div', { class: 'cli__log', role: 'log', 'aria-live': 'polite' })
+  const log = elemake('div', { class: 'cli__log', role: 'log', 'aria-live': 'polite' })
   const input = /** @type {HTMLInputElement} */ (
-    h('input', { class: 'cli__input', type: 'text', spellcheck: 'false', autocomplete: 'off', 'aria-label': 'command' })
+    elemake('input', { class: 'cli__input', type: 'text', spellcheck: 'false', autocomplete: 'off', 'aria-label': 'command' })
   )
-  const el = h(
+  const el = elemake(
     'div',
     { class: 'cli', onclick: (/** @type {MouseEvent} */ e) => e.target === el || e.target === log ? input.focus() : undefined },
     log,
-    h('label', { class: 'cli__prompt' }, h('span', { class: 'cli__caret', 'aria-hidden': 'true' }, '>'), input),
+    elemake('label', { class: 'cli__prompt' }, elemake('span', { class: 'cli__caret', 'aria-hidden': 'true' }, '>'), input),
   )
 
   /** @type {string[]} */
@@ -69,7 +69,7 @@ export function createCliDrawer(host) {
 
   /** @param {string} text @param {'echo' | 'out' | 'error'} kind */
   function print(text, kind) {
-    log.append(h('div', { class: 'cli__line', dataset: { kind } }, text || ' '))
+    log.append(elemake('div', { class: 'cli__line', dataset: { kind } }, text || ' '))
     while (log.childElementCount > MAX_LINES) log.firstElementChild?.remove()
     log.scrollTop = log.scrollHeight
   }

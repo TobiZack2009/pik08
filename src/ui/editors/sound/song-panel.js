@@ -1,5 +1,5 @@
 import '../tracker.css'
-import { clamp, h } from '../../dom.js'
+import { clamp, elemake } from '../../dom.js'
 import { createTimeline } from './timeline.js'
 import { CHANNELS, PATTERN_COUNT, isUsed, readPattern, writePattern } from '../music/music-data.js'
 
@@ -43,10 +43,10 @@ export function createSongPanel({ project, edits, sound, setStatus, follow, onEm
   const music = () => project.region('music')
   const timeline = createTimeline({ project, edits, sound, setStatus, follow, onEmpty, onSelect, isFocused })
 
-  const viewButton = h('p8-button', { icon: 'grid', title: 'Timeline or table of patterns', variant: 'ghost', toggle: true, pressed: true })
+  const viewButton = elemake('p8-button', { icon: 'grid', title: 'Timeline or table of patterns', variant: 'ghost', toggle: true, pressed: true })
   viewButton.addEventListener('change', (e) => setView(/** @type {CustomEvent} */ (e).detail.pressed ? 'timeline' : 'table'))
 
-  const clearButton = h(
+  const clearButton = elemake(
     'p8-button',
     {
       icon: 'trash',
@@ -64,9 +64,9 @@ export function createSongPanel({ project, edits, sound, setStatus, follow, onEm
     }
 
     const channels = Array.from({ length: CHANNELS }, (_, c) => {
-      const enabled = /** @type {HTMLInputElement} */ (h('input', { type: 'checkbox', 'aria-label': `pattern ${id} channel ${c} on` }))
+      const enabled = /** @type {HTMLInputElement} */ (elemake('input', { type: 'checkbox', 'aria-label': `pattern ${id} channel ${c} on` }))
       const sfx = /** @type {HTMLInputElement} */ (
-        h('input', { type: 'number', min: 0, max: 63, step: 1, class: 'tracker__num', 'aria-label': `pattern ${id} channel ${c} sfx` })
+        elemake('input', { type: 'number', min: 0, max: 63, step: 1, class: 'tracker__num', 'aria-label': `pattern ${id} channel ${c} sfx` })
       )
       const update = () => {
         const pattern = readPattern(music(), id)
@@ -79,38 +79,38 @@ export function createSongPanel({ project, edits, sound, setStatus, follow, onEm
       }
       enabled.addEventListener('change', update)
       sfx.addEventListener('change', update)
-      return { enabled, sfx, el: h('span', { class: 'tracker__cell' }, enabled, sfx) }
+      return { enabled, sfx, el: elemake('span', { class: 'tracker__cell' }, enabled, sfx) }
     })
 
     const flags = FLAGS.map(([key, label]) => {
-      const box = /** @type {HTMLInputElement} */ (h('input', { type: 'checkbox', 'aria-label': `pattern ${id} ${label}` }))
+      const box = /** @type {HTMLInputElement} */ (elemake('input', { type: 'checkbox', 'aria-label': `pattern ${id} ${label}` }))
       box.addEventListener('change', () => write({ [key]: box.checked }))
-      return { key, box, el: h('label', { class: 'tracker__flag', title: label }, box, label) }
+      return { key, box, el: elemake('label', { class: 'tracker__flag', title: label }, box, label) }
     })
 
-    const el = h(
+    const el = elemake(
       'div',
       { class: 'tracker__row', role: 'row' },
-      h('span', { class: 'tracker__index' }, two(id)),
+      elemake('span', { class: 'tracker__index' }, two(id)),
       ...channels.map((c) => c.el),
       ...flags.map((f) => f.el),
     )
     return { el, channels, flags }
   })
 
-  const head = h(
+  const head = elemake(
     'div',
     { class: 'tracker__row tracker__row--head', 'aria-hidden': 'true' },
-    h('span', { class: 'tracker__index' }, '#'),
-    ...Array.from({ length: CHANNELS }, (_, c) => h('span', { class: 'tracker__cell' }, `Ch ${c + 1}`)),
-    ...FLAGS.map(([, label]) => h('span', { class: 'tracker__flag' }, label)),
+    elemake('span', { class: 'tracker__index' }, '#'),
+    ...Array.from({ length: CHANNELS }, (_, c) => elemake('span', { class: 'tracker__cell' }, `Ch ${c + 1}`)),
+    ...FLAGS.map(([, label]) => elemake('span', { class: 'tracker__flag' }, label)),
   )
-  const grid = h('div', { class: 'tracker__grid', role: 'table', 'aria-label': 'patterns' }, head, rows.map((r) => r.el))
+  const grid = elemake('div', { class: 'tracker__grid', role: 'table', 'aria-label': 'patterns' }, head, rows.map((r) => r.el))
 
-  const el = h(
+  const el = elemake(
     'div',
     { class: 'sound__song' },
-    h('div', { class: 'tracker__bar' }, h('strong', { class: 'tracker__title' }, 'Song'), h('span', { class: 'spacer' }), viewButton, clearButton),
+    elemake('div', { class: 'tracker__bar' }, elemake('strong', { class: 'tracker__title' }, 'Song'), elemake('span', { class: 'spacer' }), viewButton, clearButton),
     timeline.el,
     grid,
   )

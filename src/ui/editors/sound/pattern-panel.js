@@ -1,5 +1,5 @@
 import '../tracker.css'
-import { clamp, h } from '../../dom.js'
+import { clamp, elemake } from '../../dom.js'
 import { createRoll } from './roll.js'
 import { EFFECT_NAMES, NOTE_COUNT, SFX_COUNT, WAVE_NAMES, clearSfx, isSilent, noteName, readHeader, readNote, writeHeader, writeNote } from '../sfx/sfx-data.js'
 
@@ -50,49 +50,49 @@ export function createPatternPanel({ project, edits, sound, setInfo, onSelect, i
 
   // ---- the list ---------------------------------------------------------------------------------
   const listButtons = Array.from({ length: SFX_COUNT }, (_, id) =>
-    h('button', { type: 'button', role: 'option', class: 'tracker__item', title: `sfx ${two(id)}`, onclick: () => select(id) }, two(id)),
+    elemake('button', { type: 'button', role: 'option', class: 'tracker__item', title: `sfx ${two(id)}`, onclick: () => select(id) }, two(id)),
   )
-  const list = h('div', { class: 'tracker__list sunken', role: 'listbox', 'aria-label': 'sound effects' }, listButtons)
+  const list = elemake('div', { class: 'tracker__list sunken', role: 'listbox', 'aria-label': 'sound effects' }, listButtons)
 
   // ---- the header -------------------------------------------------------------------------------
   /** @param {string} label @param {keyof SfxHeader} key @param {number} max */
   const headerField = (label, key, max) => {
-    const input = /** @type {HTMLInputElement} */ (h('input', { type: 'number', min: 0, max, step: 1, class: 'tracker__num', 'aria-label': label }))
+    const input = /** @type {HTMLInputElement} */ (elemake('input', { type: 'number', min: 0, max, step: 1, class: 'tracker__num', 'aria-label': label }))
     input.addEventListener('change', () => {
       const value = numberOf(input)
       if (value !== null) edits.edit(() => writeHeader(sfx(), state.sfx, { [key]: clamp(value, 0, max) }))
       refresh()
     })
-    return { input, el: h('label', { class: 'tracker__field' }, label, input) }
+    return { input, el: elemake('label', { class: 'tracker__field' }, label, input) }
   }
   const speed = headerField('Speed', 'speed', 255)
   const loopStart = headerField('Loop start', 'loopStart', NOTE_COUNT - 1)
   const loopEnd = headerField('Loop end', 'loopEnd', NOTE_COUNT)
-  const title = h('strong', { class: 'tracker__title' })
+  const title = elemake('strong', { class: 'tracker__title' })
 
-  const viewButton = h('p8-button', { icon: 'grid', title: 'Piano roll or table of notes', variant: 'ghost', toggle: true, pressed: true })
+  const viewButton = elemake('p8-button', { icon: 'grid', title: 'Piano roll or table of notes', variant: 'ghost', toggle: true, pressed: true })
   viewButton.addEventListener('change', (e) => setView(/** @type {CustomEvent} */ (e).detail.pressed ? 'roll' : 'table'))
-  const clearButton = h('p8-button', { icon: 'trash', title: 'Clear the notes of this sound', onclick: () => edits.edit(() => clearSfx(sfx(), state.sfx)) }, 'Clear')
+  const clearButton = elemake('p8-button', { icon: 'trash', title: 'Clear the notes of this sound', onclick: () => edits.edit(() => clearSfx(sfx(), state.sfx)) }, 'Clear')
 
   // ---- the notes --------------------------------------------------------------------------------
   const rows = Array.from({ length: NOTE_COUNT }, (_, n) => {
-    const pitch = /** @type {HTMLInputElement} */ (h('input', { type: 'number', min: 0, max: 63, step: 1, class: 'tracker__num', 'aria-label': `note ${n} pitch` }))
-    const name = h('span', { class: 'tracker__note' })
+    const pitch = /** @type {HTMLInputElement} */ (elemake('input', { type: 'number', min: 0, max: 63, step: 1, class: 'tracker__num', 'aria-label': `note ${n} pitch` }))
+    const name = elemake('span', { class: 'tracker__note' })
     const wave = /** @type {HTMLSelectElement} */ (
-      h('select', { class: 'tracker__select', 'aria-label': `note ${n} instrument` }, Array.from({ length: 16 }, (_, w) => h('option', { value: w }, `${w} ${waveName(w)}`)))
+      elemake('select', { class: 'tracker__select', 'aria-label': `note ${n} instrument` }, Array.from({ length: 16 }, (_, w) => elemake('option', { value: w }, `${w} ${waveName(w)}`)))
     )
-    const vol = /** @type {HTMLInputElement} */ (h('input', { type: 'number', min: 0, max: 7, step: 1, class: 'tracker__num', 'aria-label': `note ${n} volume` }))
+    const vol = /** @type {HTMLInputElement} */ (elemake('input', { type: 'number', min: 0, max: 7, step: 1, class: 'tracker__num', 'aria-label': `note ${n} volume` }))
     const fx = /** @type {HTMLSelectElement} */ (
-      h('select', { class: 'tracker__select', 'aria-label': `note ${n} effect` }, EFFECT_NAMES.map((label, i) => h('option', { value: i }, `${i} ${label}`)))
+      elemake('select', { class: 'tracker__select', 'aria-label': `note ${n} effect` }, EFFECT_NAMES.map((label, i) => elemake('option', { value: i }, `${i} ${label}`)))
     )
-    const el = h(
+    const el = elemake(
       'div',
       { class: 'tracker__row', role: 'row' },
-      h('span', { class: 'tracker__index' }, two(n)),
-      h('span', { class: 'tracker__cell' }, pitch, name),
-      h('span', { class: 'tracker__cell' }, wave),
-      h('span', { class: 'tracker__cell' }, vol),
-      h('span', { class: 'tracker__cell' }, fx),
+      elemake('span', { class: 'tracker__index' }, two(n)),
+      elemake('span', { class: 'tracker__cell' }, pitch, name),
+      elemake('span', { class: 'tracker__cell' }, wave),
+      elemake('span', { class: 'tracker__cell' }, vol),
+      elemake('span', { class: 'tracker__cell' }, fx),
     )
     /** @param {Partial<Note>} change */
     const write = (change) => {
@@ -109,25 +109,25 @@ export function createPatternPanel({ project, edits, sound, setInfo, onSelect, i
     return { el, pitch, name, wave, vol, fx }
   })
 
-  const head = h(
+  const head = elemake(
     'div',
     { class: 'tracker__row tracker__row--head', 'aria-hidden': 'true' },
-    h('span', { class: 'tracker__index' }, '#'),
-    h('span', { class: 'tracker__cell' }, 'Pitch'),
-    h('span', { class: 'tracker__cell' }, 'Instrument'),
-    h('span', { class: 'tracker__cell' }, 'Vol'),
-    h('span', { class: 'tracker__cell' }, 'Effect'),
+    elemake('span', { class: 'tracker__index' }, '#'),
+    elemake('span', { class: 'tracker__cell' }, 'Pitch'),
+    elemake('span', { class: 'tracker__cell' }, 'Instrument'),
+    elemake('span', { class: 'tracker__cell' }, 'Vol'),
+    elemake('span', { class: 'tracker__cell' }, 'Effect'),
   )
-  const grid = h('div', { class: 'tracker__grid', role: 'table', 'aria-label': 'notes' }, head, rows.map((r) => r.el))
+  const grid = elemake('div', { class: 'tracker__grid', role: 'table', 'aria-label': 'notes' }, head, rows.map((r) => r.el))
 
-  const el = h(
+  const el = elemake(
     'div',
     { class: 'tracker sound__pattern' },
     list,
-    h(
+    elemake(
       'div',
       { class: 'tracker__main' },
-      h('div', { class: 'tracker__bar' }, title, speed.el, loopStart.el, loopEnd.el, h('span', { class: 'spacer' }), viewButton, clearButton),
+      elemake('div', { class: 'tracker__bar' }, title, speed.el, loopStart.el, loopEnd.el, elemake('span', { class: 'spacer' }), viewButton, clearButton),
       roll.el,
       grid,
     ),

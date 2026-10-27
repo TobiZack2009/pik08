@@ -1,5 +1,5 @@
 import './gallery.css'
-import { h } from './dom.js'
+import { elemake } from './dom.js'
 import { showDialog } from './elements/index.js'
 import { DENSITIES, THEMES, applyPrefs, loadPrefs } from './theme.js'
 import { ICONS } from './icons.js'
@@ -17,9 +17,9 @@ export function mountGallery(root) {
    * @param {...any} content
    */
   const section = (title, ...content) =>
-    h('section', { class: 'gallery__section' }, h('h2', null, title), h('div', { class: 'gallery__row' }, ...content))
+    elemake('section', { class: 'gallery__section' }, elemake('h2', null, title), elemake('div', { class: 'gallery__row' }, ...content))
 
-  const tabs = /** @type {any} */ (h('p8-tabs'))
+  const tabs = /** @type {any} */ (elemake('p8-tabs'))
   tabs.tabs = [
     { id: 'code', label: 'Code', icon: 'code' },
     { id: 'gfx', label: 'Sprites', icon: 'image' },
@@ -28,8 +28,8 @@ export function mountGallery(root) {
     { id: 'music', label: 'Music', icon: 'music' },
   ]
 
-  const meter = /** @type {any} */ (h('p8-meter', { label: 'tokens', value: 6000, max: 8192 }))
-  const slider = h('input', {
+  const meter = /** @type {any} */ (elemake('p8-meter', { label: 'tokens', value: 6000, max: 8192 }))
+  const slider = elemake('input', {
     type: 'range',
     min: 0,
     max: 9000,
@@ -37,68 +37,68 @@ export function mountGallery(root) {
     oninput: (/** @type {Event} */ e) => (meter.value = Number(/** @type {HTMLInputElement} */ (e.target).value)),
   })
 
-  const palette = h('p8-palette', { value: 8, count: 32 })
+  const palette = elemake('p8-palette', { value: 8, count: 32 })
 
   root.replaceChildren(
-    h(
+    elemake(
       'div',
       { class: 'gallery' },
-      h(
+      elemake(
         'header',
         { class: 'gallery__header' },
-        h('h1', null, 'p8n elements'),
-        h(
+        elemake('h1', null, 'p8n elements'),
+        elemake(
           'p8-toolbar',
           null,
           ...THEMES.map((theme) =>
-            h('p8-button', { onclick: () => applyPrefs({ ...prefs, theme: (prefs.theme = theme) }) }, theme),
+            elemake('p8-button', { onclick: () => applyPrefs({ ...prefs, theme: (prefs.theme = theme) }) }, theme),
           ),
-          h('span', { class: 'sep' }),
+          elemake('span', { class: 'sep' }),
           ...DENSITIES.map((density) =>
-            h('p8-button', { onclick: () => applyPrefs({ ...prefs, density: (prefs.density = density) }) }, density),
+            elemake('p8-button', { onclick: () => applyPrefs({ ...prefs, density: (prefs.density = density) }) }, density),
           ),
         ),
       ),
       section(
         'Buttons',
-        h('p8-button', { icon: 'play', variant: 'primary' }, 'Run'),
-        h('p8-button', { icon: 'save' }, 'Save'),
-        h('p8-button', { icon: 'trash', variant: 'danger' }, 'Delete'),
-        h('p8-button', { icon: 'undo', variant: 'ghost', title: 'Undo' }),
-        h('p8-button', { icon: 'grid', toggle: true, title: 'Grid' }),
-        h('p8-button', { icon: 'grid', toggle: true, pressed: true, title: 'Grid (on)' }),
-        h('p8-button', { disabled: true }, 'Disabled'),
+        elemake('p8-button', { icon: 'play', variant: 'primary' }, 'Run'),
+        elemake('p8-button', { icon: 'save' }, 'Save'),
+        elemake('p8-button', { icon: 'trash', variant: 'danger' }, 'Delete'),
+        elemake('p8-button', { icon: 'undo', variant: 'ghost', title: 'Undo' }),
+        elemake('p8-button', { icon: 'grid', toggle: true, title: 'Grid' }),
+        elemake('p8-button', { icon: 'grid', toggle: true, pressed: true, title: 'Grid (on)' }),
+        elemake('p8-button', { disabled: true }, 'Disabled'),
       ),
       section('Tabs', tabs),
       section(
         'Toolbar',
-        h(
+        elemake(
           'p8-toolbar',
           { class: 'raised' },
-          h('p8-button', { icon: 'pencil', title: 'Pen' }),
-          h('p8-button', { icon: 'eraser', title: 'Eraser' }),
-          h('p8-button', { icon: 'paint-bucket', title: 'Fill' }),
-          h('span', { class: 'sep' }),
-          h('p8-button', { icon: 'undo', title: 'Undo' }),
-          h('p8-button', { icon: 'redo', title: 'Redo' }),
-          h('span', { class: 'spacer' }),
-          h('p8-button', { icon: 'info', title: 'Info' }),
+          elemake('p8-button', { icon: 'pencil', title: 'Pen' }),
+          elemake('p8-button', { icon: 'eraser', title: 'Eraser' }),
+          elemake('p8-button', { icon: 'paint-bucket', title: 'Fill' }),
+          elemake('span', { class: 'sep' }),
+          elemake('p8-button', { icon: 'undo', title: 'Undo' }),
+          elemake('p8-button', { icon: 'redo', title: 'Redo' }),
+          elemake('span', { class: 'spacer' }),
+          elemake('p8-button', { icon: 'info', title: 'Info' }),
         ),
       ),
       section('Palette', palette),
       section('Meter', meter, slider),
       section(
         'Split',
-        h(
+        elemake(
           'p8-split',
           { size: 200, fixed: 'end', style: { height: '120px', width: '100%' } },
-          h('div', { class: 'sunken', style: { padding: '8px' } }, 'main pane'),
-          h('div', { class: 'sunken', style: { padding: '8px' } }, 'side pane (drag the divider)'),
+          elemake('div', { class: 'sunken', style: { padding: '8px' } }, 'main pane'),
+          elemake('div', { class: 'sunken', style: { padding: '8px' } }, 'side pane (drag the divider)'),
         ),
       ),
       section(
         'Dialog',
-        h(
+        elemake(
           'p8-button',
           {
             onclick: () =>
@@ -116,7 +116,7 @@ export function mountGallery(root) {
       ),
       section(
         `Icons (${Object.keys(ICONS).length})`,
-        ...Object.keys(ICONS).map((name) => h('span', { class: 'gallery__icon', title: name }, h('p8-icon', { name }), h('small', null, name))),
+        ...Object.keys(ICONS).map((name) => elemake('span', { class: 'gallery__icon', title: name }, elemake('p8-icon', { name }), elemake('small', null, name))),
       ),
     ),
   )

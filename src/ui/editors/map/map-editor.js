@@ -1,6 +1,6 @@
 import './map-editor.css'
 import { paintIndexedRegion } from '../../../player/renderer.js'
-import { clamp, h } from '../../dom.js'
+import { clamp, elemake } from '../../dom.js'
 import { RegionHistory } from '../../history.js'
 import { titleHints } from '../../hints.js'
 import { createBindings, eventKey } from '../../shortcuts.js'
@@ -89,14 +89,14 @@ export function createMapEditor({ project, setStatus, setInfo, bindings = create
   let panKey = ''
 
   // ---- elements ---------------------------------------------------------------------------------
-  const canvas = /** @type {HTMLCanvasElement} */ (h('canvas', { class: 'pixel map-editor__map', width: MAP_WIDTH * TILE_PX, height: MAP_HEIGHT * TILE_PX }))
-  const preview = /** @type {HTMLCanvasElement} */ (h('canvas', { class: 'pixel map-editor__preview', width: MAP_WIDTH, height: MAP_HEIGHT }))
-  const grid = h('div', { class: 'map-editor__grid' })
-  const shared = h('div', { class: 'map-editor__shared' }, h('span', null, 'rows 32-63 are stored in the sprite sheet (sprites 128-255)'))
-  const marquee = h('div', { class: 'map-editor__marquee', hidden: true })
-  const cursor = h('div', { class: 'map-editor__cursor', hidden: true })
-  const board = h('div', { class: 'map-editor__board', dataset: { tool: state.tool } }, canvas, preview, grid, shared, marquee, cursor)
-  const scroller = h('div', { class: 'map-editor__scroll' }, board)
+  const canvas = /** @type {HTMLCanvasElement} */ (elemake('canvas', { class: 'pixel map-editor__map', width: MAP_WIDTH * TILE_PX, height: MAP_HEIGHT * TILE_PX }))
+  const preview = /** @type {HTMLCanvasElement} */ (elemake('canvas', { class: 'pixel map-editor__preview', width: MAP_WIDTH, height: MAP_HEIGHT }))
+  const grid = elemake('div', { class: 'map-editor__grid' })
+  const shared = elemake('div', { class: 'map-editor__shared' }, elemake('span', null, 'rows 32-63 are stored in the sprite sheet (sprites 128-255)'))
+  const marquee = elemake('div', { class: 'map-editor__marquee', hidden: true })
+  const cursor = elemake('div', { class: 'map-editor__cursor', hidden: true })
+  const board = elemake('div', { class: 'map-editor__board', dataset: { tool: state.tool } }, canvas, preview, grid, shared, marquee, cursor)
+  const scroller = elemake('div', { class: 'map-editor__scroll' }, board)
 
   const picker = createSpritePicker({ project, selection: state.brush, onSelect: (brush) => setBrush(brush) })
 
@@ -104,13 +104,13 @@ export function createMapEditor({ project, setStatus, setInfo, bindings = create
   const toolButtons = new Map()
   for (const id of MAP_TOOLS) {
     const { icon, label } = MAP_TOOL_INFO[id]
-    toolButtons.set(id, hints.hint(h('p8-button', { icon, variant: 'ghost', onclick: () => setTool(id) }), label, `map:tool:${id}`))
+    toolButtons.set(id, hints.hint(elemake('p8-button', { icon, variant: 'ghost', onclick: () => setTool(id) }), label, `map:tool:${id}`))
   }
-  const filledButton = h('p8-button', { icon: 'circle-dot', title: 'Filled rectangles and ellipses', variant: 'ghost', toggle: true })
+  const filledButton = elemake('p8-button', { icon: 'circle-dot', title: 'Filled rectangles and ellipses', variant: 'ghost', toggle: true })
   filledButton.addEventListener('change', (e) => {
     state.filled = /** @type {CustomEvent} */ (e).detail.pressed
   })
-  const tools = h('p8-toolbar', { class: 'map-editor__tools', vertical: true, 'aria-label': 'Tools' }, [...toolButtons.values()], h('div', { class: 'sep' }), filledButton)
+  const tools = elemake('p8-toolbar', { class: 'map-editor__tools', vertical: true, 'aria-label': 'Tools' }, [...toolButtons.values()], elemake('div', { class: 'sep' }), filledButton)
 
   /**
    * @param {string} icon
@@ -118,43 +118,43 @@ export function createMapEditor({ project, setStatus, setInfo, bindings = create
    * @param {import('../../shortcuts.js').ShortcutAction} action
    * @param {() => void} run
    */
-  const opButton = (icon, title, action, run) => hints.hint(h('p8-button', { icon, variant: 'ghost', onclick: run }), title, action)
+  const opButton = (icon, title, action, run) => hints.hint(elemake('p8-button', { icon, variant: 'ghost', onclick: run }), title, action)
   const undoButton = opButton('undo', 'Undo', 'undo', () => undo())
   const redoButton = opButton('redo', 'Redo', 'redo', () => redo())
   const zoomOutButton = opButton('zoom-out', 'Zoom out', 'map:zoomOut', () => zoomBy(-1))
   const zoomInButton = opButton('zoom-in', 'Zoom in', 'map:zoomIn', () => zoomBy(1))
-  const zoomLabel = h('span', { class: 'map-editor__zoom' })
-  const gridButton = h('p8-button', { icon: 'grid', title: 'Show grid', variant: 'ghost', toggle: true, pressed: true })
+  const zoomLabel = elemake('span', { class: 'map-editor__zoom' })
+  const gridButton = elemake('p8-button', { icon: 'grid', title: 'Show grid', variant: 'ghost', toggle: true, pressed: true })
   gridButton.addEventListener('change', (e) => {
     state.grid = /** @type {CustomEvent} */ (e).detail.pressed
     el.dataset.grid = state.grid ? 'on' : 'off'
   })
-  const ops = h(
+  const ops = elemake(
     'p8-toolbar',
     { class: 'map-editor__ops', 'aria-label': 'Edit' },
     undoButton,
     redoButton,
-    h('div', { class: 'sep' }),
+    elemake('div', { class: 'sep' }),
     opButton('copy', 'Copy', 'map:copy', () => copy()),
     opButton('scissors', 'Cut', 'map:cut', () => cut()),
     opButton('paste', 'Paste', 'map:paste', () => paste()),
     opButton('trash', 'Clear selected tiles', 'map:clear', () => clear()),
-    h('div', { class: 'spacer' }),
+    elemake('div', { class: 'spacer' }),
     zoomOutButton,
     zoomLabel,
     zoomInButton,
     gridButton,
   )
 
-  const brushLabel = h('p', { class: 'map-editor__brush' })
-  const main = h('div', { class: 'map-editor__main' }, ops, scroller)
-  const side = h(
+  const brushLabel = elemake('p', { class: 'map-editor__brush' })
+  const main = elemake('div', { class: 'map-editor__main' }, ops, scroller)
+  const side = elemake(
     'div',
     { class: 'map-editor__side' },
-    h('section', null, h('h3', null, 'Tiles'), picker.el, brushLabel, h('p', { class: 'faint' }, 'Drag on the sheet to pick a brush of up to 8 x 8 sprites.')),
+    elemake('section', null, elemake('h3', null, 'Tiles'), picker.el, brushLabel, elemake('p', { class: 'faint' }, 'Drag on the sheet to pick a brush of up to 8 x 8 sprites.')),
   )
-  const split = h('p8-split', { fixed: 'end', size: 300, min: 220, 'storage-key': 'map-side' }, main, side)
-  const el = h('div', { class: 'map-editor', dataset: { grid: 'on' } }, tools, split)
+  const split = elemake('p8-split', { fixed: 'end', size: 300, min: 220, 'storage-key': 'map-side' }, main, side)
+  const el = elemake('div', { class: 'map-editor', dataset: { grid: 'on' } }, tools, split)
 
   // ---- drawing ----------------------------------------------------------------------------------
   /** Repaints the whole map. */

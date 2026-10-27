@@ -1,4 +1,4 @@
-import { h } from '../../dom.js'
+import { elemake } from '../../dom.js'
 import { DENSITIES, THEMES } from '../../theme.js'
 import { row, section } from './rows.js'
 
@@ -17,21 +17,21 @@ const capitalize = (word) => word[0].toUpperCase() + word.slice(1)
  * @param {readonly Prefs[K][]} values
  */
 function choice(settings, key, label, values) {
-  return h(
+  return elemake(
     'div',
     { class: 'settings__choice', role: 'radiogroup', 'aria-label': label },
     values.map((value) =>
-      h(
+      elemake(
         'label',
         { class: 'settings__option' },
-        h('input', {
+        elemake('input', {
           type: 'radio',
           name: key,
           value,
           '.checked': settings.prefs()[key] === value,
           onchange: () => settings.setPrefs({ [key]: value }),
         }),
-        h('span', null, capitalize(value)),
+        elemake('span', null, capitalize(value)),
       ),
     ),
   )

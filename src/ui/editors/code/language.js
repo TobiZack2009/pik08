@@ -2,7 +2,7 @@ import { autocompletion, snippet, startCompletion } from '@codemirror/autocomple
 import { StateField } from '@codemirror/state'
 import { EditorView, hoverTooltip, showTooltip } from '@codemirror/view'
 import { completions, definition, hover, outline, signature } from '../../../lang/service.js'
-import { h } from '../../dom.js'
+import { elemake } from '../../dom.js'
 import { INDENT } from './lua-indent.js'
 import { toDisplay } from './p8scii-view.js'
 
@@ -76,16 +76,16 @@ export function hoverAt(getAnalysis, state, pos) {
     end: analysis.map.toDisplay(info.to),
     above: true,
     create: () => ({
-      dom: h(
+      dom: elemake(
         'div',
         { class: 'lang-hover' },
-        h('div', { class: 'lang-hover__title' }, toDisplay(info.title)),
-        info.doc && h('div', { class: 'lang-hover__doc' }, info.doc),
-        info.returns && h('div', { class: 'lang-hover__returns' }, `returns ${info.returns}`),
+        elemake('div', { class: 'lang-hover__title' }, toDisplay(info.title)),
+        info.doc && elemake('div', { class: 'lang-hover__doc' }, info.doc),
+        info.returns && elemake('div', { class: 'lang-hover__returns' }, `returns ${info.returns}`),
         info.origin === 'api' &&
           info.params
             ?.filter((p) => p.doc)
-            .map((p) => h('div', { class: 'lang-hover__param' }, h('code', null, p.name), ` ${p.doc}`)),
+            .map((p) => elemake('div', { class: 'lang-hover__param' }, elemake('code', null, p.name), ` ${p.doc}`)),
       ),
     }),
   }
@@ -114,13 +114,13 @@ export function signatureTooltip(getAnalysis, state) {
     create: () => {
       const params = help.params.map((p, i) => {
         const text = p.optional ? `[${p.name}]` : p.name
-        return h('span', { class: i === help.active ? 'lang-sig__param is-active' : 'lang-sig__param' }, i === help.active ? h('strong', null, text) : text)
+        return elemake('span', { class: i === help.active ? 'lang-sig__param is-active' : 'lang-sig__param' }, i === help.active ? elemake('strong', null, text) : text)
       })
-      const line = h('div', { class: 'lang-sig__line' }, toDisplay(help.name), '(')
+      const line = elemake('div', { class: 'lang-sig__line' }, toDisplay(help.name), '(')
       params.forEach((el, i) => line.append(i ? ', ' : '', el))
       line.append(')')
       const active = help.params[help.active]
-      return { dom: h('div', { class: 'lang-sig' }, line, active?.doc && h('div', { class: 'lang-sig__doc' }, `${active.name}: ${active.doc}`)) }
+      return { dom: elemake('div', { class: 'lang-sig' }, line, active?.doc && elemake('div', { class: 'lang-sig__doc' }, `${active.name}: ${active.doc}`)) }
     },
   }
 }
@@ -184,7 +184,7 @@ export function toggleOutline(getAnalysis, view) {
   /** @type {typeof items} */
   let shown = items
 
-  const input = h('input', {
+  const input = elemake('input', {
     class: 'lang-outline__filter',
     type: 'text',
     placeholder: 'Go to symbol',
@@ -192,8 +192,8 @@ export function toggleOutline(getAnalysis, view) {
     spellcheck: 'false',
     autocomplete: 'off',
   })
-  const list = h('ul', { class: 'lang-outline__list', role: 'listbox' })
-  const panel = h('div', { class: 'lang-outline' }, input, list)
+  const list = elemake('ul', { class: 'lang-outline__list', role: 'listbox' })
+  const panel = elemake('div', { class: 'lang-outline' }, input, list)
 
   const close = () => {
     openOutlines.delete(view)
@@ -212,7 +212,7 @@ export function toggleOutline(getAnalysis, view) {
   }
   const render = () => {
     const rows = shown.map((item, i) =>
-      h(
+      elemake(
         'li',
         {
           class: i === active ? 'lang-outline__item is-active' : 'lang-outline__item',
@@ -223,11 +223,11 @@ export function toggleOutline(getAnalysis, view) {
             jump(item)
           },
         },
-        h('span', { class: 'lang-outline__name' }, toDisplay(item.name)),
-        h('span', { class: 'lang-outline__detail' }, item.kind === 'variable' ? (item.detail ?? '') : ''),
+        elemake('span', { class: 'lang-outline__name' }, toDisplay(item.name)),
+        elemake('span', { class: 'lang-outline__detail' }, item.kind === 'variable' ? (item.detail ?? '') : ''),
       ),
     )
-    if (!rows.length) rows.push(h('li', { class: 'lang-outline__empty' }, items.length ? 'no match' : 'no functions or variables'))
+    if (!rows.length) rows.push(elemake('li', { class: 'lang-outline__empty' }, items.length ? 'no match' : 'no functions or variables'))
     list.replaceChildren(...rows)
     list.querySelector('.is-active')?.scrollIntoView?.({ block: 'nearest' })
   }
@@ -294,7 +294,7 @@ export function languageSupport(getAnalysis) {
           position: 20,
           render: (completion) => {
             const label = KIND_LABELS[completion.type ?? ''] ?? ''
-            return label ? h('span', { class: 'lang-kind' }, label) : null
+            return label ? elemake('span', { class: 'lang-kind' }, label) : null
           },
         },
       ],

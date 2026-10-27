@@ -1,6 +1,6 @@
 import './timeline.css'
 import '../tracker.css'
-import { clamp, h } from '../../dom.js'
+import { clamp, elemake } from '../../dom.js'
 import { readPattern } from '../music/music-data.js'
 import {
   BAR_COUNT,
@@ -80,15 +80,15 @@ export function createTimeline({ project, edits, sound, setStatus, follow, onEmp
   let frame = 0
 
   // ---- the grid ---------------------------------------------------------------------------------
-  const corner = h('div', { class: 'timeline__corner' })
+  const corner = elemake('div', { class: 'timeline__corner' })
   const rulerCells = Array.from({ length: BAR_COUNT }, (_, bar) => {
-    const flags = h('span', { class: 'timeline__flags' })
-    const el = h('div', { class: 'timeline__ruler', 'data-bar': bar }, h('span', { class: 'timeline__bar-no' }, String(bar)), flags)
+    const flags = elemake('span', { class: 'timeline__flags' })
+    const el = elemake('div', { class: 'timeline__ruler', 'data-bar': bar }, elemake('span', { class: 'timeline__bar-no' }, String(bar)), flags)
     return { el, flags }
   })
   const cells = Array.from({ length: CHANNELS }, (_, channel) =>
     Array.from({ length: BAR_COUNT }, (_, bar) =>
-      h('button', {
+      elemake('button', {
         type: 'button',
         class: 'timeline__cell',
         tabindex: -1,
@@ -98,20 +98,20 @@ export function createTimeline({ project, edits, sound, setStatus, follow, onEmp
       }),
     ),
   )
-  const labels = Array.from({ length: CHANNELS }, (_, c) => h('div', { class: 'timeline__label' }, `Ch ${c + 1}`))
+  const labels = Array.from({ length: CHANNELS }, (_, c) => elemake('div', { class: 'timeline__label' }, `Ch ${c + 1}`))
 
   // the selected cell is edited in place: a number, and arrows to step it by one
   const patternInput = /** @type {HTMLInputElement} */ (
-    h('input', { type: 'number', min: 0, max: 63, step: 1, class: 'timeline__number', 'aria-label': 'pattern of the cell', title: 'Pattern (sfx) of the selected cell; empty for none' })
+    elemake('input', { type: 'number', min: 0, max: 63, step: 1, class: 'timeline__number', 'aria-label': 'pattern of the cell', title: 'Pattern (sfx) of the selected cell; empty for none' })
   )
   /** @param {string} icon @param {string} title @param {number} by */
   const stepButton = (icon, title, by) => {
-    const b = h('button', { type: 'button', class: 'timeline__step', tabindex: -1, title, 'aria-label': title, onclick: () => step(by) }, h('p8-icon', { name: icon, size: 10 }))
+    const b = elemake('button', { type: 'button', class: 'timeline__step', tabindex: -1, title, 'aria-label': title, onclick: () => step(by) }, elemake('p8-icon', { name: icon, size: 10 }))
     // keep the focus where it is, so that clicking an arrow does not swallow the keys
     b.addEventListener('mousedown', (e) => e.preventDefault())
     return b
   }
-  const editor = h('div', { class: 'timeline__editor' }, patternInput, h('div', { class: 'timeline__steps' }, stepButton('chevron-up', 'Next pattern number', 1), stepButton('chevron-down', 'Previous pattern number (empty below 0)', -1)))
+  const editor = elemake('div', { class: 'timeline__editor' }, patternInput, elemake('div', { class: 'timeline__steps' }, stepButton('chevron-up', 'Next pattern number', 1), stepButton('chevron-down', 'Previous pattern number (empty below 0)', -1)))
   patternInput.addEventListener('change', commitInput)
   patternInput.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -129,7 +129,7 @@ export function createTimeline({ project, edits, sound, setStatus, follow, onEmp
     }
   })
 
-  const grid = h(
+  const grid = elemake(
     'div',
     { class: 'timeline__grid', role: 'grid', 'aria-label': 'song' },
     corner,
@@ -141,11 +141,11 @@ export function createTimeline({ project, edits, sound, setStatus, follow, onEmp
   grid.style.setProperty('--timeline-label-w', `${LABEL_W}px`)
   grid.style.setProperty('--timeline-cell-w', `${CELL_W}px`)
   grid.style.setProperty('--timeline-cell-h', `${CELL_H}px`)
-  const scroller = h('div', { class: 'timeline__scroller sunken' }, grid)
+  const scroller = elemake('div', { class: 'timeline__scroller sunken' }, grid)
 
   // ---- the toolbar ------------------------------------------------------------------------------
   /** @param {string} icon @param {string} title @param {() => void} fn @param {string} [label] */
-  const action = (icon, title, fn, label) => h('p8-button', { icon, title, variant: 'ghost', onclick: fn }, label)
+  const action = (icon, title, fn, label) => elemake('p8-button', { icon, title, variant: 'ghost', onclick: fn }, label)
 
   const newButton = action('plus', 'New empty pattern in this cell (Enter)', () => newInCell(), 'New')
   const uniqueButton = action('layers', 'Give this cell its own copy of a shared pattern', () => uniqueCell(), 'Unique')
@@ -159,7 +159,7 @@ export function createTimeline({ project, edits, sound, setStatus, follow, onEmp
   /** @type {Map<'loopStart' | 'loopBack' | 'stop', HTMLElement>} */
   const flagButtons = new Map()
   for (const { key, icon, title, label } of FLAGS) {
-    const b = h('p8-button', { icon, title, variant: 'ghost', toggle: true }, label)
+    const b = elemake('p8-button', { icon, title, variant: 'ghost', toggle: true }, label)
     b.addEventListener('change', (e) => {
       const on = /** @type {CustomEvent} */ (e).detail.pressed
       edit(() => setFlag(music(), state.cell.bar, key, on))
@@ -170,20 +170,20 @@ export function createTimeline({ project, edits, sound, setStatus, follow, onEmp
   const playButton = action('play', 'Play the song from this bar, or stop (Space)', () => togglePlay())
   if (!sound) playButton.setAttribute('disabled', '')
 
-  const bar = h(
+  const bar = elemake(
     'div',
     { class: 'timeline__bar' },
     newButton,
     uniqueButton,
     clearButton,
-    h('div', { class: 'sep' }),
+    elemake('div', { class: 'sep' }),
     insertButton,
     removeButton,
     copyBarButton,
     copyBarUniqueButton,
-    h('div', { class: 'sep' }),
+    elemake('div', { class: 'sep' }),
     ...flagButtons.values(),
-    h('span', { class: 'spacer' }),
+    elemake('span', { class: 'spacer' }),
     playButton,
   )
 
@@ -350,7 +350,7 @@ export function createTimeline({ project, edits, sound, setStatus, follow, onEmp
       const names = set.map(({ name }) => name).join(', ')
       if (ruler.flags.dataset.flags !== names) {
         ruler.flags.dataset.flags = names
-        ruler.flags.replaceChildren(...set.map(({ icon }) => h('p8-icon', { name: icon, size: 11 })))
+        ruler.flags.replaceChildren(...set.map(({ icon }) => elemake('p8-icon', { name: icon, size: 11 })))
       }
       ruler.el.title = names
       ruler.el.toggleAttribute('data-loop', inLoop.has(b))
@@ -448,7 +448,7 @@ export function createTimeline({ project, edits, sound, setStatus, follow, onEmp
     handled()
   }
 
-  const el = h('div', { class: 'timeline' }, bar, scroller)
+  const el = elemake('div', { class: 'timeline' }, bar, scroller)
   refresh()
 
   return {

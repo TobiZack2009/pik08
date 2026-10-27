@@ -1,6 +1,6 @@
 import './roll.css'
 import '../tracker.css'
-import { clamp, h } from '../../dom.js'
+import { clamp, elemake } from '../../dom.js'
 import { EFFECT_NAMES, WAVE_NAMES, noteName, readHeader, readNote } from '../sfx/sfx-data.js'
 import {
   PITCHES,
@@ -85,14 +85,14 @@ export function createRoll({ project, edits, getId, sound, setInfo, isFocused })
   let frame = 0
 
   // ---- the canvases -----------------------------------------------------------------------------
-  const ruler = /** @type {HTMLCanvasElement} */ (h('canvas', { class: 'roll__canvas roll__ruler' }))
-  const grid = /** @type {HTMLCanvasElement} */ (h('canvas', { class: 'roll__canvas roll__grid' }))
-  const lanes = /** @type {HTMLCanvasElement} */ (h('canvas', { class: 'roll__canvas roll__lanes' }))
-  const selectionBox = h('div', { class: 'roll__selection', hidden: true })
-  const playhead = h('div', { class: 'roll__playhead', hidden: true })
-  const stage = h('div', { class: 'roll__stage' }, grid, selectionBox, playhead)
-  const scroller = h('div', { class: 'roll__scroller sunken' }, stage)
-  const board = h('div', { class: 'roll__board' }, h('div', { class: 'roll__column' }, ruler, scroller, lanes))
+  const ruler = /** @type {HTMLCanvasElement} */ (elemake('canvas', { class: 'roll__canvas roll__ruler' }))
+  const grid = /** @type {HTMLCanvasElement} */ (elemake('canvas', { class: 'roll__canvas roll__grid' }))
+  const lanes = /** @type {HTMLCanvasElement} */ (elemake('canvas', { class: 'roll__canvas roll__lanes' }))
+  const selectionBox = elemake('div', { class: 'roll__selection', hidden: true })
+  const playhead = elemake('div', { class: 'roll__playhead', hidden: true })
+  const stage = elemake('div', { class: 'roll__stage' }, grid, selectionBox, playhead)
+  const scroller = elemake('div', { class: 'roll__scroller sunken' }, stage)
+  const board = elemake('div', { class: 'roll__board' }, elemake('div', { class: 'roll__column' }, ruler, scroller, lanes))
 
   /** The layout of the ruler; the grid's has no ruler of its own on top. */
   let rl = layoutFor(state.zoom)
@@ -247,27 +247,27 @@ export function createRoll({ project, edits, getId, sound, setInfo, isFocused })
   const toolButtons = new Map()
   /** @param {RollTool} id @param {string} icon @param {string} title */
   const toolButton = (id, icon, title) => {
-    const b = h('p8-button', { icon, title, variant: 'ghost', onclick: () => setTool(id) })
+    const b = elemake('p8-button', { icon, title, variant: 'ghost', onclick: () => setTool(id) })
     toolButtons.set(id, b)
     return b
   }
   /** @param {string} icon @param {string} title @param {() => void} fn */
-  const action = (icon, title, fn) => h('p8-button', { icon, title, variant: 'ghost', onclick: fn })
+  const action = (icon, title, fn) => elemake('p8-button', { icon, title, variant: 'ghost', onclick: fn })
 
   const zoomOut = action('zoom-out', 'Narrower steps', () => setZoom(state.zoom - 1))
   const zoomIn = action('zoom-in', 'Wider steps', () => setZoom(state.zoom + 1))
   const playButton = action('play', 'Play or stop (Space)', () => togglePlay())
 
   const waveSelect = /** @type {HTMLSelectElement} */ (
-    h(
+    elemake(
       'select',
       { class: 'tracker__select', 'aria-label': 'instrument', title: 'Instrument of new notes' },
-      Array.from({ length: 16 }, (_, w) => h('option', { value: w }, `${w} ${w < 8 ? WAVE_NAMES[w] : `custom ${w - 8}`}`)),
+      Array.from({ length: 16 }, (_, w) => elemake('option', { value: w }, `${w} ${w < 8 ? WAVE_NAMES[w] : `custom ${w - 8}`}`)),
     )
   )
-  const volInput = /** @type {HTMLInputElement} */ (h('input', { type: 'number', min: 0, max: 7, step: 1, class: 'tracker__num', 'aria-label': 'volume', title: 'Volume of new notes' }))
+  const volInput = /** @type {HTMLInputElement} */ (elemake('input', { type: 'number', min: 0, max: 7, step: 1, class: 'tracker__num', 'aria-label': 'volume', title: 'Volume of new notes' }))
   const fxSelect = /** @type {HTMLSelectElement} */ (
-    h('select', { class: 'tracker__select', 'aria-label': 'effect', title: 'Effect of new notes' }, EFFECT_NAMES.map((label, i) => h('option', { value: i }, `${i} ${label}`)))
+    elemake('select', { class: 'tracker__select', 'aria-label': 'effect', title: 'Effect of new notes' }, EFFECT_NAMES.map((label, i) => elemake('option', { value: i }, `${i} ${label}`)))
   )
 
   const upButton = action('chevron-up', 'Selection up a semitone (Up, Shift: octave)', () => transposeSelection(1))
@@ -278,26 +278,26 @@ export function createRoll({ project, edits, getId, sound, setInfo, isFocused })
   const loopButton = action('repeat', 'Loop the selection', () => loopSelection())
   const unloopButton = action('x', 'Remove the loop', () => edit(() => clearLoop(sfx(), getId())))
 
-  const bar = h(
+  const bar = elemake(
     'div',
     { class: 'roll__bar' },
     toolButton('draw', 'pencil', 'Draw (D)'),
     toolButton('erase', 'eraser', 'Erase (E)'),
     toolButton('select', 'box-select', 'Select steps (S)'),
-    h('div', { class: 'sep' }),
+    elemake('div', { class: 'sep' }),
     waveSelect,
     volInput,
     fxSelect,
-    h('div', { class: 'sep' }),
+    elemake('div', { class: 'sep' }),
     upButton,
     downButton,
     copyButton,
     pasteButton,
     deleteButton,
-    h('div', { class: 'sep' }),
+    elemake('div', { class: 'sep' }),
     loopButton,
     unloopButton,
-    h('span', { class: 'spacer' }),
+    elemake('span', { class: 'spacer' }),
     zoomOut,
     zoomIn,
     playButton,
@@ -685,7 +685,7 @@ export function createRoll({ project, edits, getId, sound, setInfo, isFocused })
     handled()
   }
 
-  const el = h('div', { class: 'roll' }, bar, board)
+  const el = elemake('div', { class: 'roll' }, bar, board)
   applyZoom()
   refresh()
 

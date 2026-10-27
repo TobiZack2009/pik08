@@ -1,4 +1,4 @@
-import { h } from '../dom.js'
+import { elemake } from '../dom.js'
 
 /**
  * `<p8-button icon="play" variant="primary">Run</p8-button>`
@@ -20,7 +20,7 @@ export class P8Button extends HTMLElement {
   connectedCallback() {
     if (this.#button) return
     this.#text = this.textContent?.trim() ?? ''
-    this.#button = h('button', { type: 'button', class: 'p8-button__inner' })
+    this.#button = elemake('button', { type: 'button', class: 'p8-button__inner' })
     this.replaceChildren(this.#button)
     this.#button.addEventListener('click', (e) => {
       if (this.disabled) return e.stopPropagation()
@@ -63,7 +63,7 @@ export class P8Button extends HTMLElement {
     const button = /** @type {HTMLButtonElement} */ (this.#button)
     const icon = this.getAttribute('icon')
     if (icon && !this.#icon) {
-      this.#icon = h('p8-icon', { name: icon })
+      this.#icon = elemake('p8-icon', { name: icon })
       button.prepend(this.#icon)
     } else if (icon && this.#icon) {
       this.#icon.setAttribute('name', icon)
@@ -72,7 +72,7 @@ export class P8Button extends HTMLElement {
       this.#icon = null
     }
     if (this.#text && !button.querySelector('.p8-button__text')) {
-      button.append(h('span', { class: 'p8-button__text' }, this.#text))
+      button.append(elemake('span', { class: 'p8-button__text' }, this.#text))
     }
     button.disabled = this.disabled
     const label = this.getAttribute('label') ?? this.getAttribute('title')

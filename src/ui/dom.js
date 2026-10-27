@@ -14,7 +14,7 @@
  * @param {...any} children
  * @returns {K extends keyof HTMLElementTagNameMap ? HTMLElementTagNameMap[K] : HTMLElement}
  */
-export function h(tag, props, ...children) {
+export function elemake(tag, props, ...children) {
   const el = document.createElement(tag)
   for (const [key, value] of Object.entries(props ?? {})) {
     if (value === undefined || value === null || value === false) continue

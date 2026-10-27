@@ -1,4 +1,4 @@
-import { h } from '../dom.js'
+import { elemake } from '../dom.js'
 
 /**
  * `<p8-palette value="7">`: a colour picker over the active palette. Swatches take their colour
@@ -54,9 +54,9 @@ export class P8Palette extends HTMLElement {
     /** @type {Node[]} */
     const nodes = []
     for (let i = 0; i < count; i++) {
-      if (i === 16) nodes.push(h('span', { class: 'p8-palette__gap', 'aria-hidden': 'true' }))
+      if (i === 16) nodes.push(elemake('span', { class: 'p8-palette__gap', 'aria-hidden': 'true' }))
       nodes.push(
-        h('button', {
+        elemake('button', {
           type: 'button',
           role: 'radio',
           class: 'p8-swatch',

@@ -1,4 +1,4 @@
-import { h } from '../../dom.js'
+import { elemake } from '../../dom.js'
 
 /**
  * The page layout shared by the settings categories: a title, and rows of "name and hint on the left,
@@ -10,7 +10,7 @@ import { h } from '../../dom.js'
  * @param {...any} content
  */
 export function section(title, ...content) {
-  return h('section', { class: 'settings__section' }, h('h2', { class: 'settings__title' }, title), ...content)
+  return elemake('section', { class: 'settings__section' }, elemake('h2', { class: 'settings__title' }, title), ...content)
 }
 
 /**
@@ -19,10 +19,10 @@ export function section(title, ...content) {
  * @param {HTMLElement} control
  */
 export function row(label, hint, control) {
-  return h(
+  return elemake(
     'div',
     { class: 'settings__row' },
-    h('div', { class: 'settings__text' }, h('span', { class: 'settings__label' }, label), h('span', { class: 'settings__hint' }, hint)),
+    elemake('div', { class: 'settings__text' }, elemake('span', { class: 'settings__label' }, label), elemake('span', { class: 'settings__hint' }, hint)),
     control,
   )
 }

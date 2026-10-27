@@ -1,4 +1,4 @@
-import { h } from '../dom.js'
+import { elemake } from '../dom.js'
 import { createCodeEditor } from './code/code-editor.js'
 import { createMapEditor } from './map/map-editor.js'
 import { createSettingsEditor } from './settings/settings-editor.js'
@@ -45,7 +45,7 @@ export const SETTINGS_TAB = 'settings'
  * @returns {EditorFactory}
  */
 function placeholder(title) {
-  return () => ({ el: h('div', { class: 'editor-empty' }, h('p', { class: 'faint' }, `${title} editor`)) })
+  return () => ({ el: elemake('div', { class: 'editor-empty' }, elemake('p', { class: 'faint' }, `${title} editor`)) })
 }
 
 /** @type {Record<string, EditorFactory>} */

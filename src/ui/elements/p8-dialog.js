@@ -1,4 +1,4 @@
-import { h } from '../dom.js'
+import { elemake } from '../dom.js'
 
 const FOCUSABLE = 'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]'
 
@@ -81,19 +81,19 @@ export function showDialog({ title, message, body, actions = [{ id: 'ok', label:
       resolve(result)
     }
     const titleId = `p8-dialog-title-${Math.random().toString(36).slice(2)}`
-    const dialog = h(
+    const dialog = elemake(
       'p8-dialog',
       { 'aria-labelledby': titleId, ondismiss: () => close(null) },
-      h(
+      elemake(
         'div',
         { class: 'p8-dialog__panel raised' },
-        h('h2', { id: titleId, class: 'p8-dialog__title' }, title),
-        h('div', { class: 'p8-dialog__body' }, message && h('p', null, message), body),
-        h(
+        elemake('h2', { id: titleId, class: 'p8-dialog__title' }, title),
+        elemake('div', { class: 'p8-dialog__body' }, message && elemake('p', null, message), body),
+        elemake(
           'div',
           { class: 'p8-dialog__actions' },
           actions.map((a) =>
-            h(
+            elemake(
               'p8-button',
               { variant: a.danger ? 'danger' : a.primary ? 'primary' : null, dataset: { action: a.id }, onclick: () => close(a.id) },
               a.label,

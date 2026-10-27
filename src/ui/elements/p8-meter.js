@@ -1,4 +1,4 @@
-import { h } from '../dom.js'
+import { elemake } from '../dom.js'
 
 /** Fraction of the limit from which the meter turns to a warning. */
 export const WARN_AT = 0.9
@@ -21,10 +21,10 @@ export class P8Meter extends HTMLElement {
     if (this.#fill) return
     this.setAttribute('role', 'meter')
     this.setAttribute('aria-valuemin', '0')
-    this.#label = h('span', { class: 'p8-meter__label' })
-    this.#amount = h('span', { class: 'p8-meter__amount' })
-    this.#fill = h('span', { class: 'p8-meter__fill' })
-    this.replaceChildren(this.#label, h('span', { class: 'p8-meter__bar' }, this.#fill), this.#amount)
+    this.#label = elemake('span', { class: 'p8-meter__label' })
+    this.#amount = elemake('span', { class: 'p8-meter__amount' })
+    this.#fill = elemake('span', { class: 'p8-meter__fill' })
+    this.replaceChildren(this.#label, elemake('span', { class: 'p8-meter__bar' }, this.#fill), this.#amount)
     this.#render()
   }
 

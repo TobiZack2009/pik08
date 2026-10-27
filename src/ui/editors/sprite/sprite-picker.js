@@ -1,6 +1,6 @@
 import './sprite-picker.css'
 import { paintIndexed } from '../../../player/renderer.js'
-import { clamp, h } from '../../dom.js'
+import { clamp, elemake } from '../../dom.js'
 import { SHEET_SIZE } from './raster.js'
 import { SHEET_COLS, clampSelection, dragSelection, sheetIndices } from './sprite-ops.js'
 
@@ -23,9 +23,9 @@ import { SHEET_COLS, clampSelection, dragSelection, sheetIndices } from './sprit
  */
 export function createSpritePicker({ project, selection, onSelect, max = 8 }) {
   let sel = clampSelection(selection, max)
-  const canvas = /** @type {HTMLCanvasElement} */ (h('canvas', { class: 'pixel sprite-picker__sheet', width: SHEET_SIZE, height: SHEET_SIZE }))
-  const marker = h('div', { class: 'sprite-picker__marker' })
-  const el = h('div', { class: 'sprite-picker', role: 'group', 'aria-label': 'Sprite sheet' }, canvas, marker)
+  const canvas = /** @type {HTMLCanvasElement} */ (elemake('canvas', { class: 'pixel sprite-picker__sheet', width: SHEET_SIZE, height: SHEET_SIZE }))
+  const marker = elemake('div', { class: 'sprite-picker__marker' })
+  const el = elemake('div', { class: 'sprite-picker', role: 'group', 'aria-label': 'Sprite sheet' }, canvas, marker)
 
   function place() {
     const cell = 100 / SHEET_COLS

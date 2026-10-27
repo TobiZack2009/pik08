@@ -23,7 +23,7 @@ import {
   keymap,
   lineNumbers,
 } from '@codemirror/view'
-import { h } from '../../dom.js'
+import { elemake } from '../../dom.js'
 import { createBindings } from '../../shortcuts.js'
 import { analyze, bracketsAt, markRange, normalizeInsert, syntaxProblem } from './code-model.js'
 import { codeKeymap, withoutOwned } from './keys.js'
@@ -430,7 +430,7 @@ export function createCodeEditor({ project, setInfo, bindings = createBindings(n
     })
 
   const view = new EditorView({ state: makeState(toDisplay(project.cart.code)) })
-  const el = h('div', { class: 'code-editor' }, view.dom)
+  const el = elemake('div', { class: 'code-editor' }, view.dom)
 
   const offs = [
     project.on('code', ({ source: from }) => {

@@ -1,4 +1,4 @@
-import { h } from '../dom.js'
+import { elemake } from '../dom.js'
 
 /**
  * @typedef {Object} TabSpec
@@ -57,7 +57,7 @@ export class P8Tabs extends HTMLElement {
     this.replaceChildren(
       ...this.#tabs.map((tab) => {
         const selected = tab.id === this.#value
-        return h(
+        return elemake(
           'button',
           {
             type: 'button',
@@ -69,8 +69,8 @@ export class P8Tabs extends HTMLElement {
             dataset: { id: tab.id },
             onclick: () => this.#select(tab.id),
           },
-          tab.icon && h('p8-icon', { name: tab.icon }),
-          h('span', { class: 'p8-tab__label' }, tab.label),
+          tab.icon && elemake('p8-icon', { name: tab.icon }),
+          elemake('span', { class: 'p8-tab__label' }, tab.label),
         )
       }),
     )

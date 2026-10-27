@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { h } from '../../src/ui/dom.js'
+import { elemake } from '../../src/ui/dom.js'
 import { defineElements, showDialog } from '../../src/ui/elements/index.js'
 import { ICONS } from '../../src/ui/icons.js'
 
@@ -22,11 +22,11 @@ function press(key, target, init) {
 describe('h', () => {
   it('builds elements with attributes, classes, styles, listeners and children', () => {
     const onclick = vi.fn()
-    const el = h(
+    const el = elemake(
       'div',
       { class: 'a b', id: 'x', hidden: true, nope: false, style: { color: 'red', '--k': '3' }, dataset: { n: 1 }, onclick, '.tabIndex': 2 },
       'text',
-      [h('span', null, 'in'), null, undefined, false],
+      [elemake('span', null, 'in'), null, undefined, false],
     )
     expect(el.className).toBe('a b')
     expect(el.getAttribute('hidden')).toBe('')
@@ -42,7 +42,7 @@ describe('h', () => {
 
 describe('p8-icon', () => {
   it('renders the svg of a known icon and nothing for an unknown one', () => {
-    const icon = h('p8-icon', { name: 'play' })
+    const icon = elemake('p8-icon', { name: 'play' })
     document.body.append(icon)
     const svg = icon.querySelector('svg')
     expect(svg).not.toBeNull()
@@ -52,7 +52,7 @@ describe('p8-icon', () => {
   })
 
   it('is hidden from assistive tech unless it has a label', () => {
-    const icon = h('p8-icon', { name: 'play' })
+    const icon = elemake('p8-icon', { name: 'play' })
     document.body.append(icon)
     expect(icon.getAttribute('role')).toBeNull()
     icon.setAttribute('label', 'Run')
@@ -63,7 +63,7 @@ describe('p8-icon', () => {
 
 describe('p8-button', () => {
   it('wraps a button with icon and label', () => {
-    const b = h('p8-button', { icon: 'play' }, 'Run')
+    const b = elemake('p8-button', { icon: 'play' }, 'Run')
     document.body.append(b)
     const inner = b.querySelector('button')
     expect(inner).not.toBeNull()
@@ -72,14 +72,14 @@ describe('p8-button', () => {
   })
 
   it('names icon-only buttons from label or title', () => {
-    const b = h('p8-button', { icon: 'play', title: 'Run (F5)' })
+    const b = elemake('p8-button', { icon: 'play', title: 'Run (F5)' })
     document.body.append(b)
     expect(b.querySelector('button')?.getAttribute('aria-label')).toBe('Run (F5)')
   })
 
   it('does not fire clicks while disabled', () => {
     const onclick = vi.fn()
-    const b = h('p8-button', { disabled: true, onclick }, 'Go')
+    const b = elemake('p8-button', { disabled: true, onclick }, 'Go')
     document.body.append(b)
     expect(b.querySelector('button')?.disabled).toBe(true)
     b.querySelector('button')?.click()
@@ -90,7 +90,7 @@ describe('p8-button', () => {
 
   it('toggles and reports it', () => {
     const onchange = vi.fn()
-    const b = h('p8-button', { toggle: true, onchange }, 'Grid')
+    const b = elemake('p8-button', { toggle: true, onchange }, 'Grid')
     document.body.append(b)
     const inner = /** @type {HTMLButtonElement} */ (b.querySelector('button'))
     expect(inner.getAttribute('aria-pressed')).toBe('false')
@@ -111,7 +111,7 @@ describe('p8-tabs', () => {
   ]
 
   function make() {
-    const el = /** @type {any} */ (h('p8-tabs'))
+    const el = /** @type {any} */ (elemake('p8-tabs'))
     el.tabs = tabs
     document.body.append(el)
     return el
@@ -158,7 +158,7 @@ describe('p8-tabs', () => {
 
 describe('p8-split', () => {
   function make(attrs = {}) {
-    const el = /** @type {any} */ (h('p8-split', attrs, h('div', { id: 'a' }), h('div', { id: 'b' })))
+    const el = /** @type {any} */ (elemake('p8-split', attrs, elemake('div', { id: 'a' }), elemake('div', { id: 'b' })))
     document.body.append(el)
     return el
   }
@@ -208,7 +208,7 @@ describe('p8-split', () => {
 
 describe('p8-meter', () => {
   it('shows the use of a limit and its state', () => {
-    const m = /** @type {any} */ (h('p8-meter', { label: 'tokens', value: 100, max: 1000 }))
+    const m = /** @type {any} */ (elemake('p8-meter', { label: 'tokens', value: 100, max: 1000 }))
     document.body.append(m)
     expect(m.textContent).toContain('tokens')
     expect(m.textContent).toContain('100 / 1000')
@@ -227,7 +227,7 @@ describe('p8-meter', () => {
 
 describe('p8-palette', () => {
   function make(attrs = {}) {
-    const el = /** @type {any} */ (h('p8-palette', { value: 7, ...attrs }))
+    const el = /** @type {any} */ (elemake('p8-palette', { value: 7, ...attrs }))
     document.body.append(el)
     return el
   }
@@ -297,7 +297,7 @@ describe('showDialog', () => {
   })
 
   it('focuses the primary action and returns focus afterwards', async () => {
-    const opener = h('button', null, 'open')
+    const opener = elemake('button', null, 'open')
     document.body.append(opener)
     opener.focus()
     const result = showDialog({
@@ -335,12 +335,12 @@ describe('showDialog', () => {
 
 describe('p8-toolbar', () => {
   it('moves focus with the arrow keys', () => {
-    const bar = h(
+    const bar = elemake(
       'p8-toolbar',
       null,
-      h('p8-button', { id: 'one' }, 'One'),
-      h('p8-button', { id: 'two' }, 'Two'),
-      h('p8-button', { id: 'three' }, 'Three'),
+      elemake('p8-button', { id: 'one' }, 'One'),
+      elemake('p8-button', { id: 'two' }, 'Two'),
+      elemake('p8-button', { id: 'three' }, 'Three'),
     )
     document.body.append(bar)
     const [one, two, three] = [...bar.querySelectorAll('button')]

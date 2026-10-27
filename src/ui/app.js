@@ -1,5 +1,5 @@
 import './app.css'
-import { h } from './dom.js'
+import { elemake } from './dom.js'
 import { EDITORS, SETTINGS_TAB, TABS } from './editors/index.js'
 import { defineElements } from './elements/index.js'
 import { browserIO, createFileActions, enableDropOpen } from './file-actions.js'
@@ -60,14 +60,14 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
   }
 
   // ---- status bar -------------------------------------------------------------------------------
-  const message = h('span', { class: 'status__message', role: 'status', 'aria-live': 'polite' }, 'ready')
-  const info = h('span', { class: 'status__info' })
+  const message = elemake('span', { class: 'status__message', role: 'status', 'aria-live': 'polite' }, 'ready')
+  const info = elemake('span', { class: 'status__info' })
   const numbers = /** @type {Record<string, HTMLElement>} */ ({
-    tokens: h('span', { class: 'status__num' }),
-    codeChars: h('span', { class: 'status__num' }),
-    compressedBytes: h('span', { class: 'status__num' }),
+    tokens: elemake('span', { class: 'status__num' }),
+    codeChars: elemake('span', { class: 'status__num' }),
+    compressedBytes: elemake('span', { class: 'status__num' }),
   })
-  const status = h('footer', { class: 'app__status raised' }, message, info, ...Object.values(numbers))
+  const status = elemake('footer', { class: 'app__status raised' }, message, info, ...Object.values(numbers))
 
   /** @param {string} text */
   const setStatus = (text) => (message.textContent = text)
@@ -84,7 +84,7 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
 
   // ---- editors ----------------------------------------------------------------------------------
   const ctx = { project, setStatus, setInfo, requestRun, sound, settings, bindings }
-  const editorArea = h('div', { class: 'app__editors' })
+  const editorArea = elemake('div', { class: 'app__editors' })
   /** @type {Map<string, { view: EditorView, wrap: HTMLElement }>} */
   const open = new Map()
   /** @type {string} */
@@ -92,7 +92,7 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
   /** The tab to go back to when the settings close. */
   let lastTab = TABS[0].id
 
-  const tabs = /** @type {any} */ (h('p8-tabs', { class: 'app__tabs' }))
+  const tabs = /** @type {any} */ (elemake('p8-tabs', { class: 'app__tabs' }))
 
   /** @param {string} id */
   function showTab(id) {
@@ -103,7 +103,7 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
     let entry = open.get(id)
     if (!entry) {
       const view = editors[id](ctx)
-      const wrap = h('div', { class: 'app__editor', dataset: { editor: id } }, view.el)
+      const wrap = elemake('div', { class: 'app__editor', dataset: { editor: id } }, view.el)
       editorArea.append(wrap)
       open.set(id, (entry = { view, wrap }))
     }
@@ -131,7 +131,7 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
   // ---- dock -------------------------------------------------------------------------------------
   const { width, height } = profile.display
   const preview = /** @type {HTMLCanvasElement} */ (
-    h('canvas', { class: 'pixel app__preview-canvas', width, height, 'aria-label': 'cart label or live preview' })
+    elemake('canvas', { class: 'pixel app__preview-canvas', width, height, 'aria-label': 'cart label or live preview' })
   )
   const paintLabel = () => {
     const label = project.cart.label
@@ -140,21 +140,21 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
   }
 
   const infoRows = {
-    file: h('dd'),
-    profile: h('dd', null, profile.name),
-    version: h('dd'),
-    label: h('dd'),
+    file: elemake('dd'),
+    profile: elemake('dd', null, profile.name),
+    version: elemake('dd'),
+    label: elemake('dd'),
   }
-  const cartInfo = h(
+  const cartInfo = elemake(
     'dl',
     { class: 'app__info' },
-    h('dt', null, 'file'),
+    elemake('dt', null, 'file'),
     infoRows.file,
-    h('dt', null, 'profile'),
+    elemake('dt', null, 'profile'),
     infoRows.profile,
-    h('dt', null, 'version'),
+    elemake('dt', null, 'version'),
     infoRows.version,
-    h('dt', null, 'label'),
+    elemake('dt', null, 'label'),
     infoRows.label,
   )
   const renderInfo = () => {
@@ -165,20 +165,20 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
 
   /** @type {Map<string, any>} */
   const meters = new Map()
-  const meterBox = h('div', { class: 'app__meters' })
+  const meterBox = elemake('div', { class: 'app__meters' })
   for (const usage of limitUsage({ tokens: 0, chars: 0, compressed: 0 }, profile.limits)) {
-    const meter = h('p8-meter', { label: usage.label, value: 0, max: usage.max })
+    const meter = elemake('p8-meter', { label: usage.label, value: 0, max: usage.max })
     meters.set(usage.key, meter)
     meterBox.append(meter)
   }
 
   const section = (/** @type {string} */ title, /** @type {any[]} */ ...content) =>
-    h('section', { class: 'app__section' }, h('h2', null, title), ...content)
+    elemake('section', { class: 'app__section' }, elemake('h2', null, title), ...content)
 
-  const dock = h(
+  const dock = elemake(
     'aside',
     { class: 'app__dock raised', 'aria-label': 'cart overview' },
-    section('Preview', h('div', { class: 'app__preview sunken' }, preview)),
+    section('Preview', elemake('div', { class: 'app__preview sunken' }, preview)),
     section('Cart', cartInfo),
     section('Limits', meterBox),
   )
@@ -208,7 +208,7 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
   renderStats(stats.get())
 
   // ---- top bar ----------------------------------------------------------------------------------
-  const fileName = h('span', { class: 'app__file' })
+  const fileName = elemake('span', { class: 'app__file' })
   const renderFile = () => {
     fileName.textContent = project.fileName + (project.dirty ? ' *' : '')
     document.title = `${project.dirty ? '* ' : ''}${project.fileName} - p8n`
@@ -229,12 +229,12 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
     /** @type {import('./shortcuts.js').ShortcutAction | undefined} */ action,
     /** @type {() => void} */ onclick,
   ) => {
-    const el = h('p8-button', { icon, title, onclick })
+    const el = elemake('p8-button', { icon, title, onclick })
     return action ? hint(el, title, action) : el
   }
 
   const settingsButton = hint(
-    h('p8-button', {
+    elemake('p8-button', {
       icon: 'settings',
       variant: 'ghost',
       toggle: true,
@@ -246,8 +246,8 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
 
   /** @type {EditorView | undefined} */
   let cliView
-  const cliBox = h('div', { class: 'app__cli sunken', hidden: true })
-  const cliButton = h('p8-button', {
+  const cliBox = elemake('div', { class: 'app__cli sunken', hidden: true })
+  const cliButton = elemake('p8-button', {
     icon: 'terminal',
     variant: 'ghost',
     toggle: true,
@@ -271,16 +271,16 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
     else cliView?.deactivate?.()
   }
 
-  const top = h(
+  const top = elemake(
     'header',
     { class: 'app__top raised' },
-    h('strong', { class: 'app__brand' }, 'p8n'),
-    h(
+    elemake('strong', { class: 'app__brand' }, 'p8n'),
+    elemake(
       'p8-toolbar',
       { class: 'app__toolbar' },
-      hint(h('p8-button', { icon: 'play', variant: 'primary', onclick: requestRun }, 'Run'), 'Run', 'run'),
+      hint(elemake('p8-button', { icon: 'play', variant: 'primary', onclick: requestRun }, 'Run'), 'Run', 'run'),
       button('stop', 'Stop', 'stop', requestStop),
-      h('span', { class: 'sep' }),
+      elemake('span', { class: 'sep' }),
       button('file-plus', 'New cart', undefined, () => report(actions.newCart())),
       button('folder-open', 'Open', 'open', () => report(actions.open())),
       button('save', 'Save', 'save', () => report(actions.save())),
@@ -288,15 +288,15 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
       fileName,
     ),
     tabs,
-    h('span', { class: 'spacer' }),
+    elemake('span', { class: 'spacer' }),
     cliButton,
     settingsButton,
   )
   retitle()
 
   // ---- assembly ---------------------------------------------------------------------------------
-  const split = h('p8-split', { class: 'app__main', fixed: 'end', size: 280, min: 200, 'storage-key': 'dock' }, editorArea, dock)
-  root.replaceChildren(h('div', { class: 'app' }, top, split, cliBox, status))
+  const split = elemake('p8-split', { class: 'app__main', fixed: 'end', size: 280, min: 200, 'storage-key': 'dock' }, editorArea, dock)
+  root.replaceChildren(elemake('div', { class: 'app' }, top, split, cliBox, status))
 
   // ---- wiring -----------------------------------------------------------------------------------
   const offs = [
