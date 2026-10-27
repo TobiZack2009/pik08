@@ -2,6 +2,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { pico8Profile } from '../../src/profiles/pico8/index.js'
 import { cursorInfo, createCodeEditor } from '../../src/ui/editors/code/code-editor.js'
+import { createBindings } from '../../src/ui/shortcuts.js'
 import { Project } from '../../src/ui/store.js'
 import { EditorSelection } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
@@ -22,12 +23,15 @@ afterEach(() => {
   editor = undefined
 })
 
-/** @param {string} [code] */
-function setup(code = '') {
+/**
+ * @param {string} [code]
+ * @param {import('../../src/ui/shortcuts.js').Bindings} [bindings]
+ */
+function setup(code = '', bindings = createBindings(null)) {
   const project = Project.empty(pico8Profile)
   project.cart.code = code
   const setInfo = vi.fn()
-  editor = createCodeEditor({ project, setStatus: vi.fn(), setInfo, requestRun: vi.fn() })
+  editor = createCodeEditor({ project, setStatus: vi.fn(), setInfo, requestRun: vi.fn(), bindings })
   document.body.append(editor.el)
   return { project, setInfo, view: editor.view, editor }
 }
@@ -157,6 +161,74 @@ describe('code editor', () => {
     setInfo.mockClear()
     view.dispatch({ selection: { anchor: 0 } })
     expect(setInfo).not.toHaveBeenCalled()
+  })
+})
+
+describe('code editor shortcuts', () => {
+  const alt = { altKey: true, code: 'ArrowUp' }
+
+  it('moves the line with its default key', () => {
+    const { view } = setup('a\nb')
+    view.dispatch({ selection: { anchor: 3 } })
+    pressKey(view, 'ArrowUp', alt)
+    expect(view.state.doc.toString()).toBe('b\na')
+  })
+
+  it('follows a changed key, and the default one stops working', () => {
+    const bindings = createBindings(null)
+    const { view } = setup('a\nb', bindings)
+    view.dispatch({ selection: { anchor: 3 } })
+    expect(bindings.assign('code:moveUp', 'Mod+Shift+j')).toBeNull()
+    pressKey(view, 'ArrowUp', alt)
+    expect(view.state.doc.toString()).toBe('a\nb')
+    pressKey(view, 'J', { ctrlKey: true, shiftKey: true, keyCode: 74 }) // browsers give the key code too
+    expect(view.state.doc.toString()).toBe('b\na')
+    bindings.reset('code:moveUp')
+    view.dispatch({ selection: { anchor: 0 } })
+    pressKey(view, 'ArrowDown', { altKey: true })
+    expect(view.state.doc.toString()).toBe('a\nb')
+  })
+
+  it('toggles comments on the key set for it', () => {
+    const bindings = createBindings(null)
+    const { view } = setup('a', bindings)
+    bindings.assign('code:comment', 'Mod+Shift+j')
+    pressKey(view, '/', { ctrlKey: true })
+    expect(view.state.doc.toString()).toBe('a')
+    pressKey(view, 'J', { ctrlKey: true, shiftKey: true, keyCode: 74 }) // browsers give the key code too
+    expect(view.state.doc.toString()).toBe('-- a')
+  })
+
+  it('has no key for an action left unassigned', () => {
+    const bindings = createBindings(null)
+    const { view } = setup('a\nb', bindings)
+    bindings.unbind('code:moveUp')
+    view.dispatch({ selection: { anchor: 3 } })
+    pressKey(view, 'ArrowUp', alt)
+    expect(view.state.doc.toString()).toBe('a\nb')
+  })
+
+  it('undoes and redoes with the keys shared with the other editors', () => {
+    const bindings = createBindings(null)
+    const { view } = setup('', bindings)
+    type(view, 'x')
+    pressKey(view, 'z', { ctrlKey: true })
+    expect(view.state.doc.toString()).toBe('')
+    bindings.assign('undo', 'Mod+u')
+    type(view, 'y')
+    pressKey(view, 'z', { ctrlKey: true })
+    expect(view.state.doc.toString()).toBe('y')
+    pressKey(view, 'u', { ctrlKey: true })
+    expect(view.state.doc.toString()).toBe('')
+  })
+
+  it('leaves out an undo key that is a plain letter, which would stop it being typed', () => {
+    const bindings = createBindings(null)
+    const { view } = setup('', bindings)
+    bindings.assign('undo', 'u')
+    type(view, 'ab')
+    pressKey(view, 'u')
+    expect(view.state.doc.toString()).toBe('ab')
   })
 })
 

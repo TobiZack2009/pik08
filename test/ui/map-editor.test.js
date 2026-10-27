@@ -4,6 +4,7 @@ import { pico8Profile } from '../../src/profiles/pico8/index.js'
 import { defineElements } from '../../src/ui/elements/index.js'
 import { createMapEditor } from '../../src/ui/editors/map/map-editor.js'
 import { getTile, setTile } from '../../src/ui/editors/map/map-data.js'
+import { createBindings } from '../../src/ui/shortcuts.js'
 import { Project } from '../../src/ui/store.js'
 
 beforeAll(() => defineElements())
@@ -25,9 +26,9 @@ function fakeLayout(el, cols, rows) {
   el.getBoundingClientRect = () => /** @type {DOMRect} */ ({ left: 0, top: 0, right: cols * CELL, bottom: rows * CELL, width: cols * CELL, height: rows * CELL, x: 0, y: 0, toJSON() {} })
 }
 
-function setup() {
+function setup(/** @type {import('../../src/ui/shortcuts.js').Bindings} */ bindings = createBindings(null)) {
   const project = Project.empty(pico8Profile)
-  editor = createMapEditor({ project, setStatus: vi.fn(), setInfo: vi.fn(), requestRun: vi.fn() })
+  editor = createMapEditor({ project, setStatus: vi.fn(), setInfo: vi.fn(), requestRun: vi.fn(), bindings })
   document.body.append(editor.el)
   const board = /** @type {HTMLElement} */ (editor.el.querySelector('.map-editor__board'))
   const sheet = /** @type {HTMLElement} */ (editor.el.querySelector('.sprite-picker__sheet'))
@@ -408,6 +409,69 @@ describe('map editor view', () => {
     input.remove()
     editor.deactivate?.()
     press('f')
+    expect(editor.state.tool).toBe('pen')
+  })
+})
+
+describe('map editor keys', () => {
+  it('names the keys in the tooltips', () => {
+    const { editor } = setup()
+    expect(editor.el.querySelector('p8-button[title="Eraser (E)"]')).not.toBeNull()
+    expect(editor.el.querySelector('p8-button[title="Pan (H)"]')).not.toBeNull()
+    expect(editor.el.querySelector('p8-button[title="Zoom in (+)"]')).not.toBeNull()
+  })
+
+  it('follows a rebound tool key, and the tooltip with it', () => {
+    const bindings = createBindings(null)
+    const { editor } = setup(bindings)
+    bindings.assign('map:tool:fill', 'g')
+    press('f')
+    expect(editor.state.tool).toBe('pen')
+    press('g')
+    expect(editor.state.tool).toBe('fill')
+    expect(editor.el.querySelector('p8-button[title="Fill (G)"]')).not.toBeNull()
+  })
+
+  it('zooms with rebound keys, and with either default key', () => {
+    const bindings = createBindings(null)
+    const { editor } = setup(bindings)
+    expect(editor.state.zoom).toBe(2)
+    press('+', { shiftKey: true })
+    expect(editor.state.zoom).toBe(3)
+    press('=')
+    expect(editor.state.zoom).toBe(4)
+    bindings.assign('map:zoomOut', 'z')
+    press('-')
+    expect(editor.state.zoom).toBe(4)
+    press('z')
+    expect(editor.state.zoom).toBe(3)
+  })
+
+  it('pans while the rebound key is held, and lets go when it is released', () => {
+    const bindings = createBindings(null)
+    const { board } = setup(bindings)
+    bindings.assign('map:panHold', 'q')
+    press(' ')
+    expect(board.dataset.pan).toBeUndefined()
+    press('q')
+    expect(board.dataset.pan).toBe('on')
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }))
+    expect(board.dataset.pan).toBe('on')
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'q' }))
+    expect(board.dataset.pan).toBeUndefined()
+  })
+
+  it('stops panning when the editor is left with the key held', () => {
+    const { board, editor } = setup()
+    press(' ')
+    editor.deactivate?.()
+    expect(board.dataset.pan).toBeUndefined()
+  })
+
+  it('keeps the sprite editor\'s keys to itself', () => {
+    const { editor } = setup()
+    press('v')
+    press('t')
     expect(editor.state.tool).toBe('pen')
   })
 })

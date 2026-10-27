@@ -1,9 +1,10 @@
 import './app.css'
 import { h } from './dom.js'
-import { EDITORS, TABS } from './editors/index.js'
+import { EDITORS, SETTINGS_TAB, TABS } from './editors/index.js'
 import { defineElements } from './elements/index.js'
 import { browserIO, createFileActions, enableDropOpen } from './file-actions.js'
-import { shortcutFor } from './shortcuts.js'
+import { titleHints, keysSuffix } from './hints.js'
+import { createBindings, describeActions } from './shortcuts.js'
 import { limitUsage } from './stats.js'
 import { watchStats } from './stats-model.js'
 import { createSoundService } from './audio.js'
@@ -46,6 +47,17 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
   const sound = createSoundService(project, soundOptions)
   const actions = createFileActions(project, io)
   const prefs = loadPrefs()
+  const bindings = createBindings()
+  const settings = {
+    prefs: () => prefs,
+    /** @param {Partial<typeof prefs>} patch */
+    setPrefs(patch) {
+      Object.assign(prefs, patch)
+      applyPrefs(prefs)
+    },
+    bindings,
+    actions: describeActions(TABS),
+  }
 
   // ---- status bar -------------------------------------------------------------------------------
   const message = h('span', { class: 'status__message', role: 'status', 'aria-live': 'polite' }, 'ready')
@@ -71,19 +83,20 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
   const requestStop = () => setStatus(runner ? (runner.stop() ?? 'stopped') : 'nothing is running')
 
   // ---- editors ----------------------------------------------------------------------------------
-  const ctx = { project, setStatus, setInfo, requestRun, sound }
+  const ctx = { project, setStatus, setInfo, requestRun, sound, settings, bindings }
   const editorArea = h('div', { class: 'app__editors' })
   /** @type {Map<string, { view: EditorView, wrap: HTMLElement }>} */
   const open = new Map()
   /** @type {string} */
   let current = ''
+  /** The tab to go back to when the settings close. */
+  let lastTab = TABS[0].id
 
   const tabs = /** @type {any} */ (h('p8-tabs', { class: 'app__tabs' }))
-  tabs.tabs = TABS
 
   /** @param {string} id */
   function showTab(id) {
-    if (!TABS.some((t) => t.id === id)) return
+    if (id !== SETTINGS_TAB && !TABS.some((t) => t.id === id)) return
     if (current === id) return
     open.get(current)?.view.deactivate?.()
     open.get(current)?.wrap.setAttribute('hidden', '')
@@ -97,13 +110,21 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
     entry.wrap.removeAttribute('hidden')
     current = id
     tabs.value = id
+    settingsButton.toggleAttribute('pressed', id === SETTINGS_TAB)
     setInfo('')
     entry.view.activate?.()
+    if (id === SETTINGS_TAB) return // the next visit starts on the tab before it
+    lastTab = id
     try {
       localStorage.setItem(TAB_KEY, id)
     } catch {
       // not remembered
     }
+  }
+
+  /** @param {boolean} [show] */
+  function toggleSettings(show = current !== SETTINGS_TAB) {
+    showTab(show ? SETTINGS_TAB : lastTab)
   }
   tabs.addEventListener('change', (/** @type {CustomEvent} */ e) => showTab(e.detail.value))
 
@@ -194,32 +215,34 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
     renderInfo()
   }
 
-  const button = (/** @type {string} */ icon, /** @type {string} */ title, /** @type {() => void} */ onclick, extra = {}) =>
-    h('p8-button', { icon, title, onclick, ...extra })
-
-  const themeButton = h('p8-button', { variant: 'ghost', onclick: toggleTheme })
-  function renderTheme() {
-    themeButton.setAttribute('icon', prefs.theme === 'dark' ? 'sun' : 'moon')
-    themeButton.setAttribute('title', prefs.theme === 'dark' ? 'Light theme' : 'Dark theme')
+  // Tooltips name the shortcut, so they follow it when it is rebound.
+  const hints = titleHints(bindings)
+  const hint = hints.hint
+  function retitle() {
+    tabs.tabs = TABS.map((tab, i) => ({ ...tab, title: tab.label + keysSuffix(bindings, `tab:${i}`) }))
+    tabs.value = current
   }
-  function toggleTheme() {
-    prefs.theme = prefs.theme === 'dark' ? 'light' : 'dark'
-    applyPrefs(prefs)
-    renderTheme()
-  }
-  renderTheme()
 
-  const densityButton = h('p8-button', {
-    icon: 'maximize',
-    variant: 'ghost',
-    toggle: true,
-    pressed: prefs.density === 'compact',
-    title: 'Compact layout',
-    onchange: (/** @type {CustomEvent} */ e) => {
-      prefs.density = e.detail.pressed ? 'compact' : 'comfortable'
-      applyPrefs(prefs)
-    },
-  })
+  const button = (
+    /** @type {string} */ icon,
+    /** @type {string} */ title,
+    /** @type {import('./shortcuts.js').ShortcutAction | undefined} */ action,
+    /** @type {() => void} */ onclick,
+  ) => {
+    const el = h('p8-button', { icon, title, onclick })
+    return action ? hint(el, title, action) : el
+  }
+
+  const settingsButton = hint(
+    h('p8-button', {
+      icon: 'settings',
+      variant: 'ghost',
+      toggle: true,
+      onchange: (/** @type {CustomEvent} */ e) => toggleSettings(e.detail.pressed),
+    }),
+    'Settings',
+    'toggleSettings',
+  )
 
   /** @type {EditorView | undefined} */
   let cliView
@@ -228,9 +251,9 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
     icon: 'terminal',
     variant: 'ghost',
     toggle: true,
-    title: 'Command line (Ctrl+`)',
     onchange: (/** @type {CustomEvent} */ e) => setCli(e.detail.pressed),
   })
+  hint(cliButton, 'Command line', 'toggleCli')
   /** @param {boolean} visible */
   function setCli(visible) {
     if (visible && !cli) {
@@ -255,21 +278,21 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
     h(
       'p8-toolbar',
       { class: 'app__toolbar' },
-      h('p8-button', { icon: 'play', variant: 'primary', title: 'Run (F5)', onclick: requestRun }, 'Run'),
-      button('stop', 'Stop (Shift+F5)', requestStop),
+      hint(h('p8-button', { icon: 'play', variant: 'primary', onclick: requestRun }, 'Run'), 'Run', 'run'),
+      button('stop', 'Stop', 'stop', requestStop),
       h('span', { class: 'sep' }),
-      button('file-plus', 'New cart', () => report(actions.newCart())),
-      button('folder-open', 'Open (Ctrl+O)', () => report(actions.open())),
-      button('save', 'Save (Ctrl+S)', () => report(actions.save())),
-      button('download', 'Export .p8.png (Ctrl+E)', () => report(actions.exportCart('png'))),
+      button('file-plus', 'New cart', undefined, () => report(actions.newCart())),
+      button('folder-open', 'Open', 'open', () => report(actions.open())),
+      button('save', 'Save', 'save', () => report(actions.save())),
+      button('download', 'Export .p8.png', 'export', () => report(actions.exportCart('png'))),
       fileName,
     ),
     tabs,
     h('span', { class: 'spacer' }),
     cliButton,
-    densityButton,
-    themeButton,
+    settingsButton,
   )
+  retitle()
 
   // ---- assembly ---------------------------------------------------------------------------------
   const split = h('p8-split', { class: 'app__main', fixed: 'end', size: 280, min: 200, 'storage-key': 'dock' }, editorArea, dock)
@@ -282,6 +305,8 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
       paintLabel()
       renderInfo()
     }),
+    bindings.on(retitle),
+    hints.destroy,
   ]
   renderFile()
   paintLabel()
@@ -289,7 +314,7 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
   /** @param {KeyboardEvent} e */
   const onKey = (e) => {
     if (document.querySelector('p8-dialog')) return
-    const action = shortcutFor(e)
+    const action = bindings.match(e)
     if (!action) return
     e.preventDefault()
     if (action.startsWith('tab:')) {
@@ -312,6 +337,8 @@ export function mountApp(root, { profile, editors = EDITORS, runner, cli, io = b
         return requestStop()
       case 'toggleCli':
         return setCli(Boolean(cliBox.hidden))
+      case 'toggleSettings':
+        return toggleSettings()
     }
   }
   /** @param {BeforeUnloadEvent} e */

@@ -4,6 +4,7 @@ import { lintGutter, linter } from '@codemirror/lint'
 import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search'
 import {
   Annotation,
+  Compartment,
   EditorSelection,
   EditorState,
   Prec,
@@ -23,8 +24,10 @@ import {
   lineNumbers,
 } from '@codemirror/view'
 import { h } from '../../dom.js'
+import { createBindings } from '../../shortcuts.js'
 import { analyze, bracketsAt, markRange, normalizeInsert, syntaxProblem } from './code-model.js'
-import { languageSupport } from './language.js'
+import { codeKeymap, withoutOwned } from './keys.js'
+import { languageCommands, languageSupport } from './language.js'
 import { INDENT, dedentAmount, indentAfter, toggleComment } from './lua-indent.js'
 import { fromDisplay, toDisplay } from './p8scii-view.js'
 
@@ -360,9 +363,13 @@ export function cursorInfo(state) {
  * @param {EditorContext} ctx
  * @returns {ShellEditor & { view: import('@codemirror/view').EditorView }}
  */
-export function createCodeEditor({ project, setInfo }) {
+export function createCodeEditor({ project, setInfo, bindings = createBindings(null) }) {
   const source = {}
   let active = false
+  const getAnalysis = (/** @type {EditorState} */ state) => state.field(analyzed).analysis
+  const commands = { ...languageCommands(getAnalysis), 'code:comment': commentLines }
+  // the shortcuts that can be changed in the settings; rebuilt when they are
+  const shortcuts = new Compartment()
 
   /** @param {string} display */
   const makeState = (display) =>
@@ -394,18 +401,18 @@ export function createCodeEditor({ project, setInfo }) {
         errorLine,
         normalizeInput,
         dedentOnType,
-        languageSupport((state) => state.field(analyzed).analysis),
+        languageSupport(getAnalysis),
+        shortcuts.of(codeKeymap(bindings, commands)),
         Prec.high(
           keymap.of([
             { key: 'Enter', run: insertNewline },
             { key: 'Tab', run: acceptCompletion }, // false when no list is open, so Tab goes on to indent
             { key: 'Tab', run: indentMore },
             { key: 'Shift-Tab', run: indentLess },
-            { key: 'Mod-/', run: commentLines },
           ]),
         ),
         // Mod-Enter runs the cart (the shell handles it), so it must not insert a blank line here
-        keymap.of([...defaultKeymap.filter((b) => b.key !== 'Mod-Enter'), ...historyKeymap, ...searchKeymap]),
+        keymap.of(withoutOwned([...defaultKeymap.filter((b) => b.key !== 'Mod-Enter'), ...historyKeymap, ...searchKeymap])),
         EditorView.contentAttributes.of({
           spellcheck: 'false',
           autocorrect: 'off',
@@ -435,6 +442,7 @@ export function createCodeEditor({ project, setInfo }) {
         annotations: [external.of(true), Transaction.addToHistory.of(false)],
       })
     }),
+    bindings.on(() => view.dispatch({ effects: shortcuts.reconfigure(codeKeymap(bindings, commands)) })),
     project.on('load', () => {
       view.setState(makeState(toDisplay(project.cart.code)))
       if (active) setInfo(cursorInfo(view.state))

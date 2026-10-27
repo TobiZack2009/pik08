@@ -4,6 +4,7 @@ import { pico8Profile } from '../../src/profiles/pico8/index.js'
 import { defineElements } from '../../src/ui/elements/index.js'
 import { createSpriteEditor } from '../../src/ui/editors/sprite/sprite-editor.js'
 import { getPixel, setPixel } from '../../src/ui/editors/sprite/raster.js'
+import { createBindings, formatBinding } from '../../src/ui/shortcuts.js'
 import { Project } from '../../src/ui/store.js'
 
 beforeAll(() => defineElements())
@@ -25,11 +26,11 @@ function fakeLayout(el, cells) {
   el.getBoundingClientRect = () => /** @type {DOMRect} */ ({ left: 0, top: 0, right: cells * CELL, bottom: cells * CELL, width: cells * CELL, height: cells * CELL, x: 0, y: 0, toJSON() {} })
 }
 
-function setup() {
+function setup(/** @type {import('../../src/ui/shortcuts.js').Bindings} */ bindings = createBindings(null)) {
   const project = Project.empty(pico8Profile)
   const setStatus = vi.fn()
   const setInfo = vi.fn()
-  editor = createSpriteEditor({ project, setStatus, setInfo, requestRun: vi.fn() })
+  editor = createSpriteEditor({ project, setStatus, setInfo, requestRun: vi.fn(), bindings })
   document.body.append(editor.el)
   const board = /** @type {HTMLElement} */ (editor.el.querySelector('.sprite-editor__board'))
   fakeLayout(board, 8)
@@ -389,5 +390,69 @@ describe('sprite editor and the rest of the app', () => {
     const { board, setInfo } = setup()
     pointer(board, 'pointermove', 3, 4)
     expect(setInfo).toHaveBeenLastCalledWith('Sprite 0  x 3 y 4')
+  })
+})
+
+describe('sprite editor keys', () => {
+  it('names the keys in the tooltips', () => {
+    const { editor } = setup()
+    const title = (/** @type {string} */ text) => [...editor.el.querySelectorAll('p8-button')].find((b) => b.getAttribute('title')?.startsWith(text))?.getAttribute('title')
+    expect(title('Pen')).toBe('Pen (P)')
+    expect(title('Flip horizontally')).toBe('Flip horizontally (H)')
+    expect(title('Redo')).toBe(`Redo (${formatBinding('Mod+Shift+z')})`)
+  })
+
+  it('follows a rebound tool key, and the tooltip with it', () => {
+    const bindings = createBindings(null)
+    const { editor } = setup(bindings)
+    bindings.assign('sprite:tool:line', 'q')
+    press('l')
+    expect(editor.state.tool).toBe('pen')
+    press('q')
+    expect(editor.state.tool).toBe('line')
+    expect(editor.el.querySelector('p8-button[title="Line (Q)"]')).not.toBeNull()
+  })
+
+  it('does an action with the key it was given, and not with the old one', () => {
+    const bindings = createBindings(null)
+    const { editor, project } = setup(bindings)
+    setPixel(gfxOf(project), 0, 0, 7)
+    bindings.assign('sprite:flipH', 'Alt+h')
+    press('h')
+    expect(getPixel(gfxOf(project), 0, 0)).toBe(7)
+    press('h', { altKey: true, code: 'KeyH' })
+    expect(getPixel(gfxOf(project), 7, 0)).toBe(7)
+    expect(editor.state.tool).toBe('pen')
+  })
+
+  it('changes the colour with rebound keys', () => {
+    const bindings = createBindings(null)
+    const { editor } = setup(bindings)
+    bindings.assign('sprite:colorNext', 'n')
+    press(']')
+    expect(editor.state.color).toBe(7)
+    press('n')
+    expect(editor.state.color).toBe(8)
+  })
+
+  it('does nothing for a key that was taken off', () => {
+    const bindings = createBindings(null)
+    const { editor } = setup(bindings)
+    bindings.unbind('sprite:tool:eraser')
+    press('e')
+    expect(editor.state.tool).toBe('pen')
+  })
+
+  it('still moves the selection with the arrows, which cannot be rebound', () => {
+    const { editor } = setup()
+    press('ArrowRight')
+    expect(editor.state.selection.col).toBe(1)
+  })
+
+  it('stops following the bindings when it is destroyed', () => {
+    const bindings = createBindings(null)
+    const { editor } = setup(bindings)
+    editor.destroy?.()
+    expect(() => bindings.assign('sprite:tool:pen', 'q')).not.toThrow()
   })
 })

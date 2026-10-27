@@ -1,6 +1,7 @@
 import { h } from '../dom.js'
 import { createCodeEditor } from './code/code-editor.js'
 import { createMapEditor } from './map/map-editor.js'
+import { createSettingsEditor } from './settings/settings-editor.js'
 import { createSoundEditor } from './sound/sound-editor.js'
 import { createSpriteEditor } from './sprite/sprite-editor.js'
 
@@ -14,6 +15,8 @@ import { createSpriteEditor } from './sprite/sprite-editor.js'
  * @property {(info: string) => void} setInfo       the editor's own readout (cursor position, ...)
  * @property {() => void} requestRun
  * @property {import('../audio.js').SoundService} [sound]  the live synth; absent where there is no audio
+ * @property {import('./settings/settings-editor.js').SettingsApi} [settings]  what the settings view changes; only that view needs it
+ * @property {import('../shortcuts.js').Bindings} [bindings]  the keys of the editors that have their own; they use the defaults without it
  */
 
 /**
@@ -26,13 +29,16 @@ import { createSpriteEditor } from './sprite/sprite-editor.js'
 
 /** @typedef {(ctx: EditorContext) => EditorView} EditorFactory */
 
-/** The tabs, in order (Alt+1 ... Alt+4 pick them). */
+/** The tabs, in order (Alt+1 ... Alt+4 pick them, unless rebound). */
 export const TABS = [
-  { id: 'code', label: 'Code', icon: 'code', title: 'Code (Alt+1)' },
-  { id: 'gfx', label: 'Sprites', icon: 'image', title: 'Sprites (Alt+2)' },
-  { id: 'map', label: 'Map', icon: 'map', title: 'Map (Alt+3)' },
-  { id: 'sound', label: 'Sound', icon: 'music', title: 'Sound (Alt+4)' },
+  { id: 'code', label: 'Code', icon: 'code' },
+  { id: 'gfx', label: 'Sprites', icon: 'image' },
+  { id: 'map', label: 'Map', icon: 'map' },
+  { id: 'sound', label: 'Sound', icon: 'music' },
 ]
+
+/** The view the gear button opens. It is not in the tab strip, and it is not remembered as the last tab. */
+export const SETTINGS_TAB = 'settings'
 
 /**
  * @param {string} title
@@ -49,4 +55,5 @@ export const EDITORS = {
   gfx: createSpriteEditor,
   map: createMapEditor,
   sound: createSoundEditor,
+  [SETTINGS_TAB]: createSettingsEditor,
 }

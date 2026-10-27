@@ -2,6 +2,8 @@ import './sprite-editor.css'
 import { paintIndexed } from '../../../player/renderer.js'
 import { h } from '../../dom.js'
 import { RegionHistory } from '../../history.js'
+import { titleHints } from '../../hints.js'
+import { createBindings } from '../../shortcuts.js'
 import { cssColor } from '../../theme.js'
 import { getPixel } from './raster.js'
 import {
@@ -35,16 +37,16 @@ import { createSpritePicker } from './sprite-picker.js'
 /** @import { Block, Point } from './raster.js' */
 /** @import { Rect, SpriteSelection, ToolId } from './sprite-ops.js' */
 
-/** @type {Record<ToolId, { icon: string, label: string, key: string }>} */
+/** @type {Record<ToolId, { icon: string, label: string }>} */
 export const TOOL_INFO = {
-  pen: { icon: 'pencil', label: 'Pen', key: 'p' },
-  eraser: { icon: 'eraser', label: 'Eraser', key: 'e' },
-  fill: { icon: 'paint-bucket', label: 'Fill', key: 'f' },
-  line: { icon: 'minus', label: 'Line', key: 'l' },
-  rect: { icon: 'rect', label: 'Rectangle', key: 'r' },
-  circle: { icon: 'circle', label: 'Ellipse', key: 'o' },
-  select: { icon: 'box-select', label: 'Select', key: 's' },
-  pick: { icon: 'pipette', label: 'Pick colour', key: 'i' },
+  pen: { icon: 'pencil', label: 'Pen' },
+  eraser: { icon: 'eraser', label: 'Eraser' },
+  fill: { icon: 'paint-bucket', label: 'Fill' },
+  line: { icon: 'minus', label: 'Line' },
+  rect: { icon: 'rect', label: 'Rectangle' },
+  circle: { icon: 'circle', label: 'Ellipse' },
+  select: { icon: 'box-select', label: 'Select' },
+  pick: { icon: 'pipette', label: 'Pick colour' },
 }
 
 const ARROWS = /** @type {Record<string, [number, number]>} */ ({
@@ -71,7 +73,8 @@ const ARROWS = /** @type {Record<string, [number, number]>} */ ({
  * @param {EditorContext} ctx
  * @returns {EditorView & { state: SpriteEditorState, undo: () => void, redo: () => void, setTool: (tool: ToolId) => void, setColor: (color: number) => void }}
  */
-export function createSpriteEditor({ project, setStatus, setInfo }) {
+export function createSpriteEditor({ project, setStatus, setInfo, bindings = createBindings(null) }) {
+  const hints = titleHints(bindings)
   const source = Symbol('sprite-editor')
   const palette = project.profile.display.palette
   const gfx = () => project.region('gfx')
@@ -109,8 +112,8 @@ export function createSpriteEditor({ project, setStatus, setInfo }) {
   /** @type {Map<ToolId, HTMLElement>} */
   const toolButtons = new Map()
   for (const id of TOOLS) {
-    const { icon, label, key } = TOOL_INFO[id]
-    toolButtons.set(id, h('p8-button', { icon, title: `${label} (${key.toUpperCase()})`, variant: 'ghost', onclick: () => setTool(id) }))
+    const { icon, label } = TOOL_INFO[id]
+    toolButtons.set(id, hints.hint(h('p8-button', { icon, variant: 'ghost', onclick: () => setTool(id) }), label, `sprite:tool:${id}`))
   }
   const filledButton = h('p8-button', { icon: 'circle-dot', title: 'Filled rectangles and ellipses', variant: 'ghost', toggle: true })
   filledButton.addEventListener('change', (e) => {
@@ -121,11 +124,12 @@ export function createSpriteEditor({ project, setStatus, setInfo }) {
   /**
    * @param {string} icon
    * @param {string} title
+   * @param {import('../../shortcuts.js').ShortcutAction} action
    * @param {() => void} run
    */
-  const opButton = (icon, title, run) => h('p8-button', { icon, title, variant: 'ghost', onclick: run })
-  const undoButton = opButton('undo', 'Undo (Ctrl+Z)', () => undo())
-  const redoButton = opButton('redo', 'Redo (Ctrl+Shift+Z)', () => redo())
+  const opButton = (icon, title, action, run) => hints.hint(h('p8-button', { icon, variant: 'ghost', onclick: run }), title, action)
+  const undoButton = opButton('undo', 'Undo', 'undo', () => undo())
+  const redoButton = opButton('redo', 'Redo', 'redo', () => redo())
   const gridButton = h('p8-button', { icon: 'grid', title: 'Show pixel grid', variant: 'ghost', toggle: true, pressed: true })
   gridButton.addEventListener('change', (e) => {
     state.grid = /** @type {CustomEvent} */ (e).detail.pressed
@@ -137,14 +141,14 @@ export function createSpriteEditor({ project, setStatus, setInfo }) {
     undoButton,
     redoButton,
     h('div', { class: 'sep' }),
-    opButton('flip-horizontal', 'Flip horizontally (H)', () => flip('h')),
-    opButton('flip-vertical', 'Flip vertically (V)', () => flip('v')),
-    opButton('rotate-cw', 'Rotate clockwise (T)', () => rotate()),
+    opButton('flip-horizontal', 'Flip horizontally', 'sprite:flipH', () => flip('h')),
+    opButton('flip-vertical', 'Flip vertically', 'sprite:flipV', () => flip('v')),
+    opButton('rotate-cw', 'Rotate clockwise', 'sprite:rotate', () => rotate()),
     h('div', { class: 'sep' }),
-    opButton('copy', 'Copy (Ctrl+C)', () => copy()),
-    opButton('scissors', 'Cut (Ctrl+X)', () => cut()),
-    opButton('paste', 'Paste (Ctrl+V)', () => paste()),
-    opButton('trash', 'Clear (Delete)', () => clear()),
+    opButton('copy', 'Copy', 'sprite:copy', () => copy()),
+    opButton('scissors', 'Cut', 'sprite:cut', () => cut()),
+    opButton('paste', 'Paste', 'sprite:paste', () => paste()),
+    opButton('trash', 'Clear', 'sprite:clear', () => clear()),
     h('div', { class: 'spacer' }),
     gridButton,
   )
@@ -507,42 +511,46 @@ export function createSpriteEditor({ project, setStatus, setInfo }) {
     if (e.defaultPrevented) return
     const t = e.target
     if (t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
-    const key = e.key.toLowerCase()
-    if (e.ctrlKey || e.metaKey) {
-      if (e.altKey) return
-      const run = { z: e.shiftKey ? redo : undo, y: redo, c: copy, x: cut, v: paste }[/** @type {'z'} */ (key)]
-      if (!run) return
+    const action = bindings.match(e, 'sprite')
+    if (action) {
       e.preventDefault()
-      run()
+      const tool = TOOLS.find((id) => action === `sprite:tool:${id}`)
+      if (tool) return setTool(tool)
+      switch (action) {
+        case 'undo':
+          return undo()
+        case 'redo':
+          return redo()
+        case 'sprite:copy':
+          return copy()
+        case 'sprite:cut':
+          return cut()
+        case 'sprite:paste':
+          return paste()
+        case 'sprite:flipH':
+          return flip('h')
+        case 'sprite:flipV':
+          return flip('v')
+        case 'sprite:rotate':
+          return rotate()
+        case 'sprite:clear':
+          return clear()
+        case 'sprite:deselect':
+          state.area = null
+          return showArea()
+        case 'sprite:colorPrev':
+          return setColor((state.color + 15) % 16)
+        case 'sprite:colorNext':
+          return setColor((state.color + 1) % 16)
+      }
       return
     }
-    if (e.altKey) return
+    if (e.ctrlKey || e.metaKey || e.altKey) return
     const arrow = ARROWS[e.key]
     if (arrow) {
       e.preventDefault()
       if (e.shiftKey) shift(arrow[0], arrow[1])
       else setSelection(moveSelection(state.selection, arrow[0], arrow[1]))
-      return
-    }
-    const tool = TOOLS.find((id) => TOOL_INFO[id].key === key)
-    if (tool) return setTool(tool)
-    switch (key) {
-      case 'h':
-        return flip('h')
-      case 'v':
-        return flip('v')
-      case 't':
-        return rotate()
-      case 'delete':
-      case 'backspace':
-        return clear()
-      case 'escape':
-        state.area = null
-        return showArea()
-      case '[':
-        return setColor((state.color + 15) % 16)
-      case ']':
-        return setColor((state.color + 1) % 16)
     }
   }
 
@@ -587,6 +595,7 @@ export function createSpriteEditor({ project, setStatus, setInfo }) {
       window.removeEventListener('keydown', onKey)
       cancelAnimationFrame(frame)
       for (const off of unsubscribe) off()
+      hints.destroy()
       picker.destroy()
     },
   }

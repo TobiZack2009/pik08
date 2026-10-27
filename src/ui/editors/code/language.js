@@ -1,6 +1,6 @@
 import { autocompletion, snippet, startCompletion } from '@codemirror/autocomplete'
 import { StateField } from '@codemirror/state'
-import { EditorView, hoverTooltip, keymap, showTooltip } from '@codemirror/view'
+import { EditorView, hoverTooltip, showTooltip } from '@codemirror/view'
 import { completions, definition, hover, outline, signature } from '../../../lang/service.js'
 import { h } from '../../dom.js'
 import { INDENT } from './lua-indent.js'
@@ -268,7 +268,20 @@ export function toggleOutline(getAnalysis, view) {
 // ---- the extension -------------------------------------------------------------------------------
 
 /**
- * Everything the editor needs for language support.
+ * What the language shortcuts do, by action; the code editor binds the keys.
+ * @param {GetAnalysis} getAnalysis
+ * @returns {Record<string, import('@codemirror/view').Command>}
+ */
+export function languageCommands(getAnalysis) {
+  return {
+    'code:complete': startCompletion,
+    'code:definition': (view) => gotoDefinition(getAnalysis, view, view.state.selection.main.head),
+    'code:outline': (view) => toggleOutline(getAnalysis, view),
+  }
+}
+
+/**
+ * Everything the editor needs for language support, except the keys.
  * @param {GetAnalysis} getAnalysis
  */
 export function languageSupport(getAnalysis) {
@@ -288,11 +301,6 @@ export function languageSupport(getAnalysis) {
     }),
     hoverTooltip((view, pos) => hoverAt(getAnalysis, view.state, pos), { hoverTime: 350 }),
     signatureField(getAnalysis),
-    keymap.of([
-      { key: 'Mod-Space', run: startCompletion },
-      { key: 'F12', run: (view) => gotoDefinition(getAnalysis, view, view.state.selection.main.head), preventDefault: true },
-      { key: 'Mod-Shift-o', run: (view) => toggleOutline(getAnalysis, view), preventDefault: true },
-    ]),
     EditorView.domEventHandlers({
       mousedown(event, view) {
         if (event.button !== 0 || !(event.metaKey || event.ctrlKey)) return false

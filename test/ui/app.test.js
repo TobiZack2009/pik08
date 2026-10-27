@@ -175,12 +175,157 @@ describe('mountApp', () => {
     key({ key: 'F5' })
     expect(run).not.toHaveBeenCalled()
   })
+})
+
+describe('settings', () => {
+  const gear = () => /** @type {HTMLElement} */ (root.querySelector('.app__top > p8-button:last-child'))
+  const click = (/** @type {HTMLElement} */ el) => /** @type {HTMLElement} */ (el.querySelector('.p8-button__inner')).click()
+
+  it('opens from the gear at the far end of the top bar and closes back to the tab before', () => {
+    const { app } = mount()
+    app.showTab('map')
+    expect(gear().getAttribute('icon')).toBe('settings')
+    click(gear())
+    expect(app.tab).toBe('settings')
+    expect(gear().hasAttribute('pressed')).toBe(true)
+    expect(root.querySelector('[data-editor="settings"]')?.hasAttribute('hidden')).toBe(false)
+    expect(root.querySelector('[data-editor="map"]')?.hasAttribute('hidden')).toBe(true)
+    click(gear())
+    expect(app.tab).toBe('map')
+    expect(gear().hasAttribute('pressed')).toBe(false)
+  })
+
+  it('leaves no tab of the strip selected while it shows', () => {
+    const { app } = mount()
+    app.showTab('settings')
+    expect(root.querySelectorAll('.p8-tab[aria-selected="true"]')).toHaveLength(0)
+    app.showTab('gfx')
+    expect(root.querySelector('.p8-tab[aria-selected="true"]')?.getAttribute('data-id')).toBe('gfx')
+    expect(gear().hasAttribute('pressed')).toBe(false)
+  })
+
+  it('toggles with Ctrl+comma', () => {
+    const { app } = mount()
+    key({ key: ',', ctrlKey: true })
+    expect(app.tab).toBe('settings')
+    key({ key: ',', ctrlKey: true })
+    expect(app.tab).toBe('code')
+  })
+
+  it('goes to a tab with Alt+digit', () => {
+    const { app } = mount()
+    app.showTab('settings')
+    key({ key: '2', code: 'Digit2', altKey: true })
+    expect(app.tab).toBe('gfx')
+  })
+
+  it('is not what the next visit starts on', () => {
+    const { app } = mount()
+    app.showTab('sound')
+    app.showTab('settings')
+    app.destroy()
+    expect(mount().app.tab).toBe('sound')
+  })
 
   it('switches the theme', () => {
+    const { app } = mount()
+    app.showTab('settings')
+    const light = /** @type {HTMLInputElement} */ (root.querySelector('input[name="theme"][value="light"]'))
+    light.checked = true
+    light.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(document.documentElement.dataset.theme).toBe('light')
+    expect(JSON.parse(localStorage.getItem('p8n.prefs') ?? '{}').theme).toBe('light')
+  })
+
+  it('switches the density, and has no density button in the top bar', () => {
+    const { app } = mount()
+    expect(root.querySelector('.app__top p8-button[icon="maximize"]')).toBeNull()
+    app.showTab('settings')
+    const compact = /** @type {HTMLInputElement} */ (root.querySelector('input[name="density"][value="compact"]'))
+    compact.checked = true
+    compact.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(document.documentElement.dataset.density).toBe('compact')
+    expect(JSON.parse(localStorage.getItem('p8n.prefs') ?? '{}').density).toBe('compact')
+  })
+
+  it('rebinds an editor key and the editor follows, tooltip and all', () => {
+    const { app } = mount()
+    app.showTab('map')
+    app.showTab('settings')
+    ;/** @type {HTMLElement} */ (root.querySelector('.settings__category[data-id="shortcuts"]')).click()
+    const fill = /** @type {HTMLElement} */ (root.querySelector('[data-action="map:tool:fill"] .settings__key'))
+    fill.click()
+    fill.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true }))
+    expect(JSON.parse(localStorage.getItem('p8n.shortcuts') ?? '{}')['map:tool:fill']).toEqual(['g'])
+
+    app.showTab('map')
+    const board = /** @type {HTMLElement} */ (root.querySelector('.map-editor__board'))
+    key({ key: 'f' })
+    expect(board.dataset.tool).toBe('pen')
+    key({ key: 'g' })
+    expect(board.dataset.tool).toBe('fill')
+    expect(root.querySelector('.map-editor p8-button[title="Fill (G)"]')).not.toBeNull()
+  })
+
+  it('does not run the editors\' keys while the settings show', () => {
+    const { app } = mount()
+    app.showTab('map')
+    app.showTab('settings')
+    key({ key: 'e' })
+    app.showTab('map')
+    expect(/** @type {HTMLElement} */ (root.querySelector('.map-editor__board')).dataset.tool).toBe('pen')
+  })
+
+  it('has no theme button in the top bar any more', () => {
     mount()
-    const before = document.documentElement.dataset.theme
-    const toggle = /** @type {HTMLElement} */ (root.querySelector('.app__top > p8-button:last-child .p8-button__inner'))
-    toggle.click()
-    expect(document.documentElement.dataset.theme).not.toBe(before)
+    expect(root.querySelector('.app__top p8-button[icon="sun"], .app__top p8-button[icon="moon"]')).toBeNull()
+  })
+
+  it('applies a rebound shortcut at once and remembers it', () => {
+    const run = vi.fn()
+    const { app } = mount({ runner: { run, stop: vi.fn() } })
+    app.showTab('settings')
+    const shortcuts = /** @type {HTMLElement} */ (root.querySelector('.settings__category[data-id="shortcuts"]'))
+    shortcuts.click()
+    const runKey = /** @type {HTMLElement} */ (root.querySelector('[data-action="run"] .settings__key'))
+    runKey.click()
+    runKey.dispatchEvent(new KeyboardEvent('keydown', { key: 'F7', bubbles: true, cancelable: true }))
+    key({ key: 'F5' })
+    expect(run).not.toHaveBeenCalled()
+    key({ key: 'F7' })
+    expect(run).toHaveBeenCalledTimes(1)
+
+    app.destroy()
+    mount({ runner: { run, stop: vi.fn() } })
+    key({ key: 'F7' })
+    expect(run).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not run the cart for the key that sets a shortcut', () => {
+    const run = vi.fn()
+    const { app } = mount({ runner: { run, stop: vi.fn() } })
+    app.showTab('settings')
+    root.querySelector('.settings__category[data-id="shortcuts"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    const saveKey = /** @type {HTMLElement} */ (root.querySelector('[data-action="save"] .settings__key'))
+    saveKey.click()
+    const pressed = new KeyboardEvent('keydown', { key: 'F5', bubbles: true, cancelable: true })
+    saveKey.dispatchEvent(pressed)
+    expect(run).not.toHaveBeenCalled()
+    expect(pressed.defaultPrevented).toBe(true)
+  })
+
+  it('names the shortcut in the tooltips and follows a change', () => {
+    const { app } = mount()
+    const runButton = () => root.querySelector('.app__toolbar p8-button[icon="play"]')
+    const codeTab = () => root.querySelector('.p8-tab[data-id="code"]')
+    expect(runButton()?.getAttribute('title')).toBe('Run (F5)')
+    expect(codeTab()?.getAttribute('title')).toMatch(/^Code \(Alt\+1\)$|^Code \(⌥1\)$/)
+    app.showTab('settings')
+    root.querySelector('.settings__category[data-id="shortcuts"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    const runKey = /** @type {HTMLElement} */ (root.querySelector('[data-action="run"] .settings__key'))
+    runKey.click()
+    runKey.dispatchEvent(new KeyboardEvent('keydown', { key: 'F7', bubbles: true, cancelable: true }))
+    expect(runButton()?.getAttribute('title')).toBe('Run (F7)')
+    expect(root.querySelectorAll('.p8-tab[aria-selected="true"]')).toHaveLength(0)
   })
 })

@@ -1,6 +1,8 @@
 import './sound.css'
 import '../tracker.css'
 import { h } from '../../dom.js'
+import { titleHints } from '../../hints.js'
+import { createBindings } from '../../shortcuts.js'
 import { createRegionEdits } from '../region-edits.js'
 import { createPatternPanel } from './pattern-panel.js'
 import { createSongPanel } from './song-panel.js'
@@ -36,7 +38,8 @@ import { barSpeed, cellSfx, freeSfx, isEmptySfx, setCell, usage } from './song.j
  *   redo: () => void,
  * }}
  */
-export function createSoundEditor({ project, setInfo, setStatus, sound }) {
+export function createSoundEditor({ project, setInfo, setStatus, sound, bindings = createBindings(null) }) {
+  const hints = titleHints(bindings)
   const source = Symbol('sound-editor')
   /** @type {{ focus: SoundFocus }} */
   const state = { focus: 'song' }
@@ -125,8 +128,8 @@ export function createSoundEditor({ project, setInfo, setStatus, sound }) {
   const pattern = createPatternPanel({ project, edits: patternEdits, sound, setInfo, onSelect: showInfo, isFocused: isFocused('pattern') })
   const song = createSongPanel({ project, edits, sound, setStatus, follow: (id) => pattern.select(id), onEmpty: offerDraft, onSelect: showInfo, isFocused: isFocused('song') })
 
-  const undoButton = h('p8-button', { icon: 'undo', title: 'Undo (Ctrl+Z)', onclick: () => undo() })
-  const redoButton = h('p8-button', { icon: 'redo', title: 'Redo (Ctrl+Shift+Z)', onclick: () => redo() })
+  const undoButton = hints.hint(h('p8-button', { icon: 'undo', onclick: () => undo() }), 'Undo', 'undo')
+  const redoButton = hints.hint(h('p8-button', { icon: 'redo', onclick: () => redo() }), 'Redo', 'redo')
   const bar = h('div', { class: 'tracker__bar' }, h('strong', { class: 'tracker__title' }, 'Sound'), h('span', { class: 'spacer' }), undoButton, redoButton)
 
   const el = h('div', { class: 'sound' }, bar, song.el, pattern.el)
@@ -170,14 +173,14 @@ export function createSoundEditor({ project, setInfo, setStatus, sound }) {
   // ---- the keyboard -----------------------------------------------------------------------------
   /** @param {KeyboardEvent} e */
   function onKey(e) {
-    if (e.defaultPrevented || !(e.ctrlKey || e.metaKey) || e.altKey) return
+    if (e.defaultPrevented) return
     const t = e.target
     // text fields keep their own undo
     if (t instanceof HTMLElement && (t.isContentEditable || t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && /** @type {HTMLInputElement} */ (t).type !== 'checkbox'))) return
-    const key = e.key.toLowerCase()
-    if (key !== 'z' && key !== 'y') return
+    const action = bindings.match(e, 'editor')
+    if (action !== 'undo' && action !== 'redo') return
     e.preventDefault()
-    if (key === 'y' || e.shiftKey) redo()
+    if (action === 'redo') redo()
     else undo()
   }
 
@@ -225,6 +228,7 @@ export function createSoundEditor({ project, setInfo, setStatus, sound }) {
       song.destroy()
       pattern.destroy()
       for (const off of unsubscribe) off()
+      hints.destroy()
     },
   }
 }

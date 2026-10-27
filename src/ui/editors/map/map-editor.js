@@ -2,6 +2,8 @@ import './map-editor.css'
 import { paintIndexedRegion } from '../../../player/renderer.js'
 import { clamp, h } from '../../dom.js'
 import { RegionHistory } from '../../history.js'
+import { titleHints } from '../../hints.js'
+import { createBindings, eventKey } from '../../shortcuts.js'
 import { createSpritePicker } from '../sprite/sprite-picker.js'
 import { SHAPE_TOOLS, clampSelection, inRect, shapePoints, strokePoints } from '../sprite/sprite-ops.js'
 import { MAP_HEIGHT, MAP_WIDTH, getTile, isSharedRow, regionsTouched } from './map-data.js'
@@ -28,17 +30,17 @@ import {
 /** @import { TileBlock } from './map-data.js' */
 /** @import { MapToolId } from './map-ops.js' */
 
-/** @type {Record<MapToolId, { icon: string, label: string, key: string }>} */
+/** @type {Record<MapToolId, { icon: string, label: string }>} */
 export const MAP_TOOL_INFO = {
-  pen: { icon: 'pencil', label: 'Draw with the brush', key: 'p' },
-  eraser: { icon: 'eraser', label: 'Eraser', key: 'e' },
-  fill: { icon: 'paint-bucket', label: 'Fill', key: 'f' },
-  line: { icon: 'minus', label: 'Line', key: 'l' },
-  rect: { icon: 'rect', label: 'Rectangle', key: 'r' },
-  circle: { icon: 'circle', label: 'Ellipse', key: 'o' },
-  select: { icon: 'box-select', label: 'Select tiles', key: 's' },
-  pick: { icon: 'pipette', label: 'Pick tile', key: 'i' },
-  pan: { icon: 'hand', label: 'Pan (or hold Space)', key: 'h' },
+  pen: { icon: 'pencil', label: 'Draw with the brush' },
+  eraser: { icon: 'eraser', label: 'Eraser' },
+  fill: { icon: 'paint-bucket', label: 'Fill' },
+  line: { icon: 'minus', label: 'Line' },
+  rect: { icon: 'rect', label: 'Rectangle' },
+  circle: { icon: 'circle', label: 'Ellipse' },
+  select: { icon: 'box-select', label: 'Select tiles' },
+  pick: { icon: 'pipette', label: 'Pick tile' },
+  pan: { icon: 'hand', label: 'Pan' },
 }
 
 /** Zoom steps: how many screen pixels one sprite pixel gets. */
@@ -65,7 +67,8 @@ const HISTORY_REGIONS = ['map', 'gfx']
  * @param {EditorContext} ctx
  * @returns {EditorView & { state: MapEditorState, undo: () => void, redo: () => void, setTool: (tool: MapToolId) => void, setZoom: (zoom: number) => void }}
  */
-export function createMapEditor({ project, setStatus, setInfo }) {
+export function createMapEditor({ project, setStatus, setInfo, bindings = createBindings(null) }) {
+  const hints = titleHints(bindings)
   const source = Symbol('map-editor')
   const palette = project.profile.display.palette
   const map = () => project.region('map')
@@ -82,6 +85,8 @@ export function createMapEditor({ project, setStatus, setInfo }) {
   /** something changed the graphics while the tab was hidden */
   let stale = false
   let spaceDown = false
+  /** The key that is holding the pan, so letting go of it ends the pan. */
+  let panKey = ''
 
   // ---- elements ---------------------------------------------------------------------------------
   const canvas = /** @type {HTMLCanvasElement} */ (h('canvas', { class: 'pixel map-editor__map', width: MAP_WIDTH * TILE_PX, height: MAP_HEIGHT * TILE_PX }))
@@ -98,8 +103,8 @@ export function createMapEditor({ project, setStatus, setInfo }) {
   /** @type {Map<MapToolId, HTMLElement>} */
   const toolButtons = new Map()
   for (const id of MAP_TOOLS) {
-    const { icon, label, key } = MAP_TOOL_INFO[id]
-    toolButtons.set(id, h('p8-button', { icon, title: `${label} (${key.toUpperCase()})`, variant: 'ghost', onclick: () => setTool(id) }))
+    const { icon, label } = MAP_TOOL_INFO[id]
+    toolButtons.set(id, hints.hint(h('p8-button', { icon, variant: 'ghost', onclick: () => setTool(id) }), label, `map:tool:${id}`))
   }
   const filledButton = h('p8-button', { icon: 'circle-dot', title: 'Filled rectangles and ellipses', variant: 'ghost', toggle: true })
   filledButton.addEventListener('change', (e) => {
@@ -110,13 +115,14 @@ export function createMapEditor({ project, setStatus, setInfo }) {
   /**
    * @param {string} icon
    * @param {string} title
+   * @param {import('../../shortcuts.js').ShortcutAction} action
    * @param {() => void} run
    */
-  const opButton = (icon, title, run) => h('p8-button', { icon, title, variant: 'ghost', onclick: run })
-  const undoButton = opButton('undo', 'Undo (Ctrl+Z)', () => undo())
-  const redoButton = opButton('redo', 'Redo (Ctrl+Shift+Z)', () => redo())
-  const zoomOutButton = opButton('zoom-out', 'Zoom out (-)', () => zoomBy(-1))
-  const zoomInButton = opButton('zoom-in', 'Zoom in (+)', () => zoomBy(1))
+  const opButton = (icon, title, action, run) => hints.hint(h('p8-button', { icon, variant: 'ghost', onclick: run }), title, action)
+  const undoButton = opButton('undo', 'Undo', 'undo', () => undo())
+  const redoButton = opButton('redo', 'Redo', 'redo', () => redo())
+  const zoomOutButton = opButton('zoom-out', 'Zoom out', 'map:zoomOut', () => zoomBy(-1))
+  const zoomInButton = opButton('zoom-in', 'Zoom in', 'map:zoomIn', () => zoomBy(1))
   const zoomLabel = h('span', { class: 'map-editor__zoom' })
   const gridButton = h('p8-button', { icon: 'grid', title: 'Show grid', variant: 'ghost', toggle: true, pressed: true })
   gridButton.addEventListener('change', (e) => {
@@ -129,10 +135,10 @@ export function createMapEditor({ project, setStatus, setInfo }) {
     undoButton,
     redoButton,
     h('div', { class: 'sep' }),
-    opButton('copy', 'Copy (Ctrl+C)', () => copy()),
-    opButton('scissors', 'Cut (Ctrl+X)', () => cut()),
-    opButton('paste', 'Paste (Ctrl+V)', () => paste()),
-    opButton('trash', 'Clear selected tiles (Delete)', () => clear()),
+    opButton('copy', 'Copy', 'map:copy', () => copy()),
+    opButton('scissors', 'Cut', 'map:cut', () => cut()),
+    opButton('paste', 'Paste', 'map:paste', () => paste()),
+    opButton('trash', 'Clear selected tiles', 'map:clear', () => clear()),
     h('div', { class: 'spacer' }),
     zoomOutButton,
     zoomLabel,
@@ -522,42 +528,46 @@ export function createMapEditor({ project, setStatus, setInfo }) {
     if (e.defaultPrevented) return
     const t = e.target
     if (t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
-    const key = e.key.toLowerCase()
-    if (e.ctrlKey || e.metaKey) {
-      if (e.altKey) return
-      const run = { z: e.shiftKey ? redo : undo, y: redo, c: copy, x: cut, v: paste }[/** @type {'z'} */ (key)]
-      if (!run) return
-      e.preventDefault()
-      run()
-      return
-    }
-    if (e.altKey) return
-    if (key === ' ') {
-      e.preventDefault()
-      spaceDown = true
-      board.dataset.pan = 'on'
-      return
-    }
-    const tool = MAP_TOOLS.find((id) => MAP_TOOL_INFO[id].key === key)
+    const action = bindings.match(e, 'map')
+    if (!action) return
+    e.preventDefault()
+    const tool = MAP_TOOLS.find((id) => action === `map:tool:${id}`)
     if (tool) return setTool(tool)
-    switch (key) {
-      case '+':
-      case '=':
-        return zoomBy(1)
-      case '-':
-        return zoomBy(-1)
-      case 'delete':
-      case 'backspace':
+    switch (action) {
+      case 'undo':
+        return undo()
+      case 'redo':
+        return redo()
+      case 'map:copy':
+        return copy()
+      case 'map:cut':
+        return cut()
+      case 'map:paste':
+        return paste()
+      case 'map:clear':
         return clear()
-      case 'escape':
+      case 'map:deselect':
         state.area = null
         return showArea()
+      case 'map:zoomIn':
+        return zoomBy(1)
+      case 'map:zoomOut':
+        return zoomBy(-1)
+      case 'map:panHold':
+        spaceDown = true
+        panKey = eventKey(e)
+        board.dataset.pan = 'on'
+        return
     }
   }
 
   /** @param {KeyboardEvent} e */
   function onKeyUp(e) {
-    if (e.key !== ' ') return
+    if (!spaceDown || eventKey(e) !== panKey) return
+    stopPanHold()
+  }
+
+  function stopPanHold() {
     spaceDown = false
     delete board.dataset.pan
   }
@@ -602,7 +612,7 @@ export function createMapEditor({ project, setStatus, setInfo }) {
     },
     deactivate() {
       active = false
-      spaceDown = false
+      stopPanHold()
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('keyup', onKeyUp)
       place(cursor, null)
@@ -611,6 +621,7 @@ export function createMapEditor({ project, setStatus, setInfo }) {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('keyup', onKeyUp)
       for (const off of unsubscribe) off()
+      hints.destroy()
       picker.destroy()
     },
   }
